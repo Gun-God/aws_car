@@ -1,0 +1,33 @@
+#开发环境
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/aws?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: postgres
+    password: 123456
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+#mybatis:
+#  mapper-locations: classpath:mappers/*Dao.xml
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    map-underscore-to-camel-case: true
+#配置日志
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+server:
+  port: 8888
+  tomcat.uri-encoding: UTF-8
+  servlet:
+      context-path: /aws
+      session:
+        timeout: 60m
+
+upyun:
+  bucketName: xxx
+  username:
+  password:
+  imageHost: xx
