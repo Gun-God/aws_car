@@ -50,7 +50,7 @@ public class AwsCarNo implements Serializable {
     /**
      * 车牌颜色
      */
-    private String color;
+    private Integer color;
 
     /**
      * 车道
