@@ -13,7 +13,7 @@ import gnu.io.CommPortIdentifier;
  */
 
 public class RxtxBuilder {
-    public static RtxCommUtil init(String name, int bits,int type) {
+    public static RtxCommUtil init(String name, int bits,int type, String code, int factory) {
         Enumeration portList = CommPortIdentifier.getPortIdentifiers(); // 得到当前连接上的端口
         while (portList.hasMoreElements()) {
             CommPortIdentifier temp = (CommPortIdentifier) portList.nextElement();
@@ -22,7 +22,7 @@ public class RxtxBuilder {
                     System.out.println("设备类型：--->" + temp.getPortType());
                     System.out.println("设备名称：---->" + temp.getName());
                     System.err.println("端口---" + temp.getName() + "启动监听");
-                    return new RtxCommUtil(temp,name,bits, type);
+                    return new RtxCommUtil(temp,name,bits, type,code,factory);
                 }
             }
         }

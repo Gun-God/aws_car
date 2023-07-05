@@ -14,10 +14,8 @@ import org.springframework.stereotype.Component;
 public class StandGuard  implements ApplicationRunner, DisposableBean {
     @Override
     public void run(ApplicationArguments args) {
-        System.out.println("你好。");
     }
     @Override
     public void destroy() {
-        System.out.println("再见!");
     }
 }

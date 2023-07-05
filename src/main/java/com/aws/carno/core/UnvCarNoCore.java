@@ -6,6 +6,8 @@ import com.aws.carno.Struct.NETDEV_DEVICE_INFO_S;
 import com.aws.carno.Struct.NETDEV_PIC_DATA_S;
 import com.aws.carno.domain.AwsCarNo;
 import com.aws.carno.domain.AwsPreCheckData;
+import com.aws.carno.mapper.AwsCarTypeIdRelationMapper;
+import com.aws.carno.mapper.AwsCarTypeMapper;
 import com.aws.carno.mapper.AwsPreCheckDataMapper;
 import com.aws.carno.service.AwsCarNoService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -16,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -29,6 +33,7 @@ import java.util.Date;
  */
 @Slf4j
 public class UnvCarNoCore {
+    public static UnvCarNoCore unvCarNoCore;
     private static final Logger LOGGER = LogManager.getLogger(UnvCarNoCore.class.getName());
     private static ImosSdkInterface ITF = null;
     private static final String CURRENTDIRECTORY = System.getProperty("user.dir");
@@ -46,6 +51,12 @@ public class UnvCarNoCore {
     AwsCarNoService noService;
     @Autowired
     AwsPreCheckDataMapper preCheckDataMapper;
+    @PostConstruct
+    public void init(){
+        unvCarNoCore.preCheckDataMapper=this.preCheckDataMapper;
+        unvCarNoCore.noService=this.noService;
+    }
+
 
 
     class multiPicDataCall implements ImosSdkInterface.NETDEV_PIC_UPLOAD_PF {

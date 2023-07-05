@@ -134,10 +134,10 @@ public class HikCarNoCore {
                 try {
                     if (osSelect.isWindows())
                         //win系统加载库路径
-                        strDllPath = System.getProperty("user.dir") + "\\libs\\hiv\\lib\\HCNetSDK.dll";
+                        strDllPath = System.getProperty("user.dir") + "\\libs\\hik\\windows\\HCNetSDK.dll";
                     else if (osSelect.isLinux())
                         //Linux系统加载库路径
-                        strDllPath = System.getProperty("user.dir") + "libs/hiv//lib/libhcnetsdk.so";
+                        strDllPath = System.getProperty("user.dir") + "libs/hik/linux/libhcnetsdk.so";
                     hCNetSDK = (HCNetSDK) Native.loadLibrary(strDllPath, HCNetSDK.class);
                 } catch (Exception ex) {
                     System.out.println("loadLibrary: " + strDllPath + " Error: " + ex.getMessage());

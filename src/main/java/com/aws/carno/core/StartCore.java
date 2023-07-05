@@ -2,7 +2,6 @@ package com.aws.carno.core;
 
 import com.aws.carno.Interface.HCNetSDK;
 import com.aws.carno.Interface.ImosSdkInterface;
-import com.aws.carno.Utils.NetDEVSdk;
 import com.aws.carno.domain.AwsScan;
 import com.aws.carno.mapper.AwsScanMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -13,9 +12,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author :hyw
@@ -27,13 +28,21 @@ import java.util.Map;
 @Component
 @Order(1)
 public class StartCore implements CommandLineRunner {
+    public StartCore startCore;
 
     @Autowired
     AwsScanMapper scanMapper;
+    @PostConstruct
+    public void init(){
+        startCore.scanMapper=this.scanMapper;
+    }
 
 
     public static Map<String, UnvCarNoCore> UnvMaps = new HashMap<>();
     public static Map<String, HikCarNoCore> HikMaps = new HashMap<>();
+    public static ConcurrentHashMap<byte[],String> hashMap=new ConcurrentHashMap<>();
+
+
 
 
     public void carWeighStart() {

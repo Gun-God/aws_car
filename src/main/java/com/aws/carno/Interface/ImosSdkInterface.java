@@ -17,7 +17,7 @@ public interface ImosSdkInterface extends StdCallLibrary
     String path = System.getProperty("user.dir");
     boolean is64Bit = Platform.is64Bit();
     ImosSdkInterface instance =
-            (ImosSdkInterface) Native.loadLibrary(is64Bit ? (path + "\\windll\\X64\\dll\\NetDEVSDK.dll") :
+            (ImosSdkInterface) Native.loadLibrary(is64Bit ? (path + "\\libs\\unv\\win64\\NetDEVSDK.dll") :
                     (path + "\\windll\\X86\\dll\\NetDEVSDK.dll"), ImosSdkInterface.class);
 
 

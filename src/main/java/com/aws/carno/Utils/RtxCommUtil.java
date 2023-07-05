@@ -6,8 +6,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.aws.carno.core.HikCarNoCore;
+import com.aws.carno.core.StartCore;
+import com.aws.carno.core.UnvCarNoCore;
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
@@ -29,9 +33,13 @@ public class RtxCommUtil implements SerialPortEventListener {
     CommPortIdentifier portId;
     public int type;
     public BlockingQueue<byte[]> msgQueue = new LinkedBlockingQueue<>();
+    String code;
+    int factory;
 
-    public RtxCommUtil(CommPortIdentifier temp, String portName, int bits, int type) {
+    public RtxCommUtil(CommPortIdentifier temp, String portName, int bits, int type, String code, int factory) {
         this.type = type;
+        this.code=code;
+        this.factory=factory;
         try {
             portId = temp;
             // 打开串口,延迟为2毫秒
@@ -88,8 +96,21 @@ public class RtxCommUtil implements SerialPortEventListener {
                     while (inputStream.available() > 0) {
                         numBytes = inputStream.read(readBuffer);
                         if (numBytes > 0) {
-                            if (type == 1)
+                            if (type == 1){
+                                //生成唯一流水号
+                                String preNo = StringUtil.genNo();
+                                StartCore.hashMap.put(readBuffer,preNo);
+                                if (factory == 1) {
+                                    UnvCarNoCore unv = StartCore.UnvMaps.get(code);
+                                    //接收到称台数据 调用宇视摄像头异步抓拍;
+                                    unv.CaptureSyncAction(preNo);
+                                } else if (factory == 2) {
+                                    HikCarNoCore hik = StartCore.HikMaps.get(code);
+                                    //接收到称台数据 调用海康摄像头异步抓拍;
+                                    hik.startListen(preNo);
+                                }
                                 msgQueue.add(readBuffer);
+                            }
                             readBuffer = new byte[1024];// 重新构造缓冲对象，否则有可能会影响接下来接收的数据
                         }
                     }
