@@ -74,7 +74,7 @@ public class RtxCommUtil implements SerialPortEventListener {
         }
     }
 
-
+    //TODO 处理串口的函数
     @Override
     public void serialEvent(SerialPortEvent event) {
         switch (event.getEventType()) {
@@ -94,24 +94,27 @@ public class RtxCommUtil implements SerialPortEventListener {
                 try {
                     int numBytes = -1;
                     while (inputStream.available() > 0) {
+                        System.err.println("");
                         numBytes = inputStream.read(readBuffer);
                         if (numBytes > 0) {
                             if (type == 1){
                                 //生成唯一流水号
                                 String preNo = StringUtil.genNo();
-                                StartCore.hashMap.put(readBuffer,preNo);
-                                if (factory == 1) {
-                                    UnvCarNoCore unv = StartCore.UnvMaps.get(code);
-                                    //接收到称台数据 调用宇视摄像头异步抓拍;
-                                    unv.CaptureSyncAction(preNo);
-                                } else if (factory == 2) {
-                                    HikCarNoCore hik = StartCore.HikMaps.get(code);
-                                    //接收到称台数据 调用海康摄像头异步抓拍;
-                                    hik.startListen(preNo);
-                                }
+                                //将称台返回数据临时存储
+                                StartCore.hashMap.put(Arrays.hashCode(readBuffer),preNo);
+//                                if (factory == 1) {
+//                                    UnvCarNoCore unv = StartCore.UnvMaps.get(code);
+//                                    //接收到称台数据 调用宇视摄像头异步抓拍;
+//                                    unv.CaptureSyncAction(preNo);
+//                                } else if (factory == 2) {
+//                                    HikCarNoCore hik = StartCore.HikMaps.get(code);
+//                                    //接收到称台数据 调用海康摄像头异步抓拍;
+//                                   // hik.startListen(preNo);
+//                                }
                                 msgQueue.add(readBuffer);
                             }
-                            readBuffer = new byte[1024];// 重新构造缓冲对象，否则有可能会影响接下来接收的数据
+                            readBuffer = new byte[1024];//
+                            // 重新构造缓冲对象，否则有可能会影响接下来接收的数据
                         }
                     }
                 } catch (IOException e) {

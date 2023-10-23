@@ -13,8 +13,17 @@ import com.aws.carno.mapper.AwsCarTypeMapper;
 import com.aws.carno.mapper.AwsPreCheckDataMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
+import static com.aws.carno.Utils.RTXDataParse.hexStrToByteArray;
 
 /**
  * @author :hyw
@@ -22,23 +31,30 @@ import javax.annotation.PostConstruct;
  * @description 称台核心类
  * @date : 2023/06/20 11:21
  */
-
+@Component
 public class CarWeightCore {
 
     public static CarWeightCore carWeightCore;
     @Autowired
-    AwsCarTypeIdRelationMapper relationMapper;
+    public AwsCarTypeIdRelationMapper relationMapper;
     @Autowired
-    AwsPreCheckDataMapper preCheckDataMapper;
+    public AwsPreCheckDataMapper preCheckDataMapper;
     @Autowired
-    AwsCarTypeMapper carTypeMapper;
+    public  AwsCarTypeMapper carTypeMapper;
 
     @PostConstruct
     public void init() {
+        carWeightCore=this;
         carWeightCore.preCheckDataMapper = this.preCheckDataMapper;
         carWeightCore.relationMapper = this.relationMapper;
         carWeightCore.carTypeMapper = this.carTypeMapper;
     }
+
+
+//    public  void  test(){
+//        System.err.println(11);
+//        System.err.println( carWeightCore.preCheckDataMapper.selectList(null).size());
+//    }
 
 
     public void startMain(String name, int bits, String code, int factory) {
@@ -52,25 +68,51 @@ public class CarWeightCore {
             while (true) {
                 // 如果堵塞队列中存在数据就将其输出
                 if (commUtil.msgQueue.size() > 0) {
+                    //TODO 将消息队列的消息转化成哈希码，后面利用哈希码取出哈希map中的唯一流水号
                     byte[] bytes = commUtil.msgQueue.take();
-                    AwsPreCheckData preCheckData = RTXDataParse.byteArrayToObjData(bytes);
-                    String preNo = StartCore.hashMap.get(bytes);
+                    String hex = new BigInteger(1, bytes).toString(16);
+                    System.out.println(hex);
+                    StringBuffer hex1 = new StringBuffer();
+                    for (int i=0;i<hex.length();i+=2){
+                        if(i+2<=hex.length()){
+                            hex1.append(hex.substring(i,i+2));
+                            hex1.append(" ");
+                        }
+
+
+                    }
+                    System.out.println(hex1);
+
+                    // System.err.println(new String(bytes, Charset.defaultCharset()));
+                    byte[] bytes1=hexStrToByteArray(hex1.toString());
+
+                    int hashCode= Arrays.hashCode(bytes);
+                    //将称台字节数据解析到实体类
+                    AwsPreCheckData preCheckData = RTXDataParse.byteArrayToObjData(bytes1);
+                    //TODO 打印实体类数据(称重信息,重点看流水号是否绑定成功)
+                    System.out.println("=========================================================");
+                    System.out.println("称重台检测内容：");
+                    System.err.println(preCheckData);
+                    String preNo = StartCore.hashMap.get(hashCode);
+
                     AwsCarTypeIdRelation relation = relationMapper.selectOne(new QueryWrapper<AwsCarTypeIdRelation>().lambda().eq(AwsCarTypeIdRelation::getVehType, preCheckData.getCarTypeId()));
                     int carTypeId = 0;
                     if (relation != null) {
                         carTypeId = relation.getCarTypeId();
                     }
-                    AwsCarType carType = carTypeMapper.selectById(carTypeId);
+                    AwsCarType carType = carWeightCore.carTypeMapper.selectById(carTypeId);
                     if (carType != null)
                         preCheckData.setLimitAmt(carType.getLimitAmt());
                     else
                         preCheckData.setLimitAmt(0d);
                     preCheckData.setCarTypeId(carTypeId);
-                    AwsPreCheckData p = preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
+                    //TODO 查重
+                    AwsPreCheckData p = carWeightCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
+                    //TODO 如果是空的，则插入称重,最大限重，车辆类型等内容插入数据库
                     if (p == null)
-                        preCheckDataMapper.insert(preCheckData);
+                        carWeightCore.preCheckDataMapper.insert(preCheckData);
                     else {
-                        preCheckDataMapper.update(preCheckData, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
+                        carWeightCore.preCheckDataMapper.update(preCheckData, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
                     }
                     System.err.println("车道:" + preCheckData.getLane());
                 }
@@ -79,6 +121,7 @@ public class CarWeightCore {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
     }
 
 }

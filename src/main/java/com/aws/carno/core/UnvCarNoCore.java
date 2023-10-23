@@ -6,8 +6,6 @@ import com.aws.carno.Struct.NETDEV_DEVICE_INFO_S;
 import com.aws.carno.Struct.NETDEV_PIC_DATA_S;
 import com.aws.carno.domain.AwsCarNo;
 import com.aws.carno.domain.AwsPreCheckData;
-import com.aws.carno.mapper.AwsCarTypeIdRelationMapper;
-import com.aws.carno.mapper.AwsCarTypeMapper;
 import com.aws.carno.mapper.AwsPreCheckDataMapper;
 import com.aws.carno.service.AwsCarNoService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -37,8 +35,8 @@ public class UnvCarNoCore {
     private static final Logger LOGGER = LogManager.getLogger(UnvCarNoCore.class.getName());
     private static ImosSdkInterface ITF = null;
     private static final String CURRENTDIRECTORY = System.getProperty("user.dir");
-    private ImosSdkInterface.NETDEV_PIC_UPLOAD_PF multiPicDataCallBackFun;
-    private int m_lChannelID = 1;
+    private final ImosSdkInterface.NETDEV_PIC_UPLOAD_PF multiPicDataCallBackFun;
+//    private int m_lChannelID = 1;
     private String tfLocalIP;
     private Pointer m_lpDevHandle;
     private Pointer m_lpPicHandle;
@@ -53,18 +51,18 @@ public class UnvCarNoCore {
     AwsPreCheckDataMapper preCheckDataMapper;
     @PostConstruct
     public void init(){
+        unvCarNoCore=this;
         unvCarNoCore.preCheckDataMapper=this.preCheckDataMapper;
         unvCarNoCore.noService=this.noService;
     }
 
 
-
+    //TODO 获取到抓拍数据（包括车辆颜色，车牌号）后，对数据进行进一步的处理
     class multiPicDataCall implements ImosSdkInterface.NETDEV_PIC_UPLOAD_PF {
 
         @Override
         public void callback(NETDEV_PIC_DATA_S.ByReference pstPicData, Pointer lpUserParam) {
             AwsCarNo carNo = new AwsCarNo();
-
             int i;
             Pointer p;
             File file;
@@ -102,7 +100,6 @@ public class UnvCarNoCore {
                     if (!file.exists()) {
                         file.createNewFile();
                     }
-
                     fileOutputStream = new FileOutputStream(file);
                     try {
                         fileOutputStream.write(imageData);
@@ -136,7 +133,7 @@ public class UnvCarNoCore {
                 LOGGER.error("Error" + ex.getMessage(), ex);
             }
             rowValues[5] = "否";
-            noService.insertCarNo(carNo);
+            unvCarNoCore.noService.insertCarNo(carNo);
 
             // vehicleInfoModel.addRow(rowValues);
         }
@@ -144,6 +141,7 @@ public class UnvCarNoCore {
 
 
     public UnvCarNoCore() {
+        //todo 只是定义好了multiPicDataCallBackFun，并不是现在就执行它
         //自动抓拍回调函数
         multiPicDataCallBackFun = new multiPicDataCall();
     }
@@ -172,19 +170,13 @@ public class UnvCarNoCore {
 //        } else {
 //            ifReTran = NetDEVEnum.FALSE;
 //        }
-        if ((localIP.isEmpty()) && (NetDEVEnum.TRUE == ifReTran)) {
+        if (localIP.isEmpty()) {
             log.info("本地IP为空.");
             // JOptionPane.showMessageDialog(this, "本地IP为空.");
             return;
         }
-
-        if ((localIP.isEmpty()) || (NetDEVEnum.FALSE == ifReTran)) {
-            reTranIP = "";
-        } else {
-            reTranIP = localIP;
-        }
-
-      m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, Pointer.NULL, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+        reTranIP = localIP;
+        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, Pointer.NULL, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
         if (Pointer.NULL == m_lpPicHandle) {
             log.info("照片流起流失败.");
         } else {
@@ -221,7 +213,6 @@ public class UnvCarNoCore {
             ITF.NETDEV_Logout(m_lpDevHandle);
             return false;
         }
-
 //        String userName = tfUserName.getText();
 //        String passWord = tfPassWord.getText();
 //        String deviceIP = tfDeviceIP.getText();
@@ -334,7 +325,7 @@ public class UnvCarNoCore {
 
         PointerByReference pstPicData = new PointerByReference();
         String dirPath = CURRENTDIRECTORY + File.separator + "pic" + File.separator;
-
+        //TODO 抓拍并存储到pstPicData,最终存储到stpicData
         iRet = ITF.NETDEV_TriggerSync(m_lpDevHandle, pstPicData);
         if (NetDEVEnum.TRUE != iRet) {
             return;
@@ -345,6 +336,7 @@ public class UnvCarNoCore {
         if (!file.exists()) {
             file.mkdir();
         }
+        //TODO 循环处理抓拍数据，图片存入本地
         for (int i = 0; i < stPicData.ulPicNumber; i++) {
             p = picData[i].getPointer();
             imageData = p.getByteArray(0, stPicData.aulDataLen[i]);
@@ -367,7 +359,7 @@ public class UnvCarNoCore {
                 LOGGER.error("Error" + ex.getMessage(), ex);
             }
         }
-
+//TODO 判断车牌颜色
         if ((stPicData.lPlateColor >= 0) && (stPicData.lPlateColor <= 4)) {
             iColorIndex = stPicData.lPlateColor;
         }
@@ -393,17 +385,19 @@ public class UnvCarNoCore {
             LOGGER.error("Error" + ex.getMessage(), ex);
         }
         rowValues[5] = "是";
-        noService.insertCarNo(carNo);
+        //插入aws_car_no这个表
+        unvCarNoCore.noService.insertCarNo(carNo);
         AwsPreCheckData pre=new AwsPreCheckData();
         pre.setPreNo(preNo);
         pre.setCarNo(rowValues[4]);
         pre.setImg(szTmpFile);
         pre.setCreateTime(new Date());
-        AwsPreCheckData preCheckData=preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo,preNo));
+        //插入/更新per_check_data这个表
+        AwsPreCheckData preCheckData=unvCarNoCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo,preNo));
         if (preCheckData==null)
-            preCheckDataMapper.insert(pre);
+            unvCarNoCore.preCheckDataMapper.insert(pre);
         else {
-            preCheckDataMapper.update(pre,new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo,preNo));
+            unvCarNoCore.preCheckDataMapper.update(pre,new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo,preNo));
         }
 
     }//GEN-LAST:event_btnCaptureSyncActionPerformed

@@ -4,7 +4,7 @@ spring:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/aws?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: postgres
-    password: 123456
+    password: 1026
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

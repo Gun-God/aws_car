@@ -32,43 +32,39 @@ public class StartCore implements CommandLineRunner {
 
     @Autowired
     AwsScanMapper scanMapper;
-    @PostConstruct
-    public void init(){
-        startCore.scanMapper=this.scanMapper;
-    }
-
-
+//    @PostConstruct
+//    public void init(){
+//        startCore.scanMapper=this.scanMapper;
+//    }
     public static Map<String, UnvCarNoCore> UnvMaps = new HashMap<>();
     public static Map<String, HikCarNoCore> HikMaps = new HashMap<>();
-    public static ConcurrentHashMap<byte[],String> hashMap=new ConcurrentHashMap<>();
-
-
+    public static ConcurrentHashMap<Integer,String> hashMap=new ConcurrentHashMap<>();
 
 
     public void carWeighStart() {
         QueryWrapper<AwsScan> qw = new QueryWrapper<>();
         qw.eq("state", 1);
         qw.eq("type", 2);
+        //List<AwsScan> list = scanMapper.selectList(qw);
+//        CarWeightCore cRead = new CarWeightCore();
+//        cRead.startMain("COM1", 115200, "0", 0);
         List<AwsScan> list = scanMapper.selectList(qw);
         for (AwsScan scan : list) {
+            //AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getCode()));
+
+            AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getReCode()));
+
             CarWeightCore cRead = new CarWeightCore();
-            cRead.startMain(scan.getPortName(), 5600, scan.getCode(), scan.getFactory());
+            //波特率    5600
+            cRead.startMain(scan.getPortName(), 115200, awsScan.getCode(), awsScan.getFactory());
+            //cRead.startMain(scan.getPortName(), 5600, scan.getCode(), scan.getFactory());
+
         }
-
-
-//            try {
-//                String st = "哈哈----你好";
-//                System.out.println("发出字节数：" + st.getBytes("gbk").length);
-////                cRead.outputStream.write(st.getBytes("gbk"), 0,
-////                        st.getBytes("gbk").length);
-//            } catch (IOException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
     }
 
     public void UnvCarNoStart() {
         ImosSdkInterface it = ImosSdkInterface.instance;
+        //TODO 初始化sdk
         UnvCarNoCore.initSDK(it);
         log.info("初始化宇视SDK--仅此一次");
         QueryWrapper<AwsScan> qw = new QueryWrapper<>();
@@ -84,16 +80,8 @@ public class StartCore implements CommandLineRunner {
                 st.loginPerformed(scan.getUserName(), scan.getPassword(), scan.getVideoIp(), scan.getPort());
             UnvMaps.put(scan.getCode(), st);
         }
-
-
-//        if (m_lpDevHandle != Pointer.NULL) {
-//            log.info("开始车牌抓拍");
-//            st.btnPicPlayActionPerformed(m_lpDevHandle);
-//        }
     }
-
     public void HikCarNoStart() {
-
         if (HikCarNoCore.hCNetSDK == null) {
             if (!HikCarNoCore.createSDKInstance()) {
                 System.out.println("Load SDK fail");
@@ -119,24 +107,29 @@ public class StartCore implements CommandLineRunner {
         qw.eq("state", 1);
         qw.eq("type", 3);
         qw.eq("factory", 2);
-        List<AwsScan> list = scanMapper.selectList(qw);
-        //   startListen("10.16.36.108",(short)7200);//报警监听，不需要登陆设备
+        //TODO 添加海康设备到list
+       List<AwsScan> list = scanMapper.selectList(qw);
+         //startListen("10.16.36.108",(short)7200);//报警监听，不需要登陆设备
+        //TODO 将list设备加载进hikMaps中
         for (AwsScan scan : list) {
             String ip = scan.getVideoIp();
             int port = scan.getPort();
-            HikCarNoCore hik = new HikCarNoCore(ip, (short) port);
+            String user_name = scan.getUserName();
+            String password = scan.getPassword();
+           // 10.19测试  HikCarNoCore hik = new HikCarNoCore("192.10.12.245", (short)8000);
+            HikCarNoCore hik = new HikCarNoCore(ip, (short)port,user_name, password);
+
             HikMaps.put(scan.getCode(), hik);
 
-        }
-
-
+             }
     }
-
-
     @Override
     public void run(String... args) throws Exception {
         UnvCarNoStart();
         HikCarNoStart();
         carWeighStart();
+        //new ScoketWeightCore("192.10.12.243", 3132);
+//        LedCore led=new LedCore();
+//        led.startMain("COM3",9600,"请苏FE1861进站检测");
     }
 }

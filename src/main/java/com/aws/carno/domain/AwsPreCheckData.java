@@ -104,4 +104,27 @@ public class AwsPreCheckData implements Serializable {
      */
     private Integer color;
 
+    @Override
+    public String toString() {
+        return "AwsPreCheckData{" +
+                "id=" + id +
+                ", preNo='" + preNo + '\'' +
+                ", carNo='" + carNo + '\'' +
+                ", weight=" + weight +
+                ", limitAmt=" + limitAmt +
+                ", axisNum=" + axisNum +
+                ", speed=" + speed +
+                ", lane=" + lane +
+                ", deviceId='" + deviceId + '\'' +
+                ", createTime=" + createTime +
+                ", passTime=" + passTime +
+                ", img='" + img + '\'' +
+                ", url='" + url + '\'' +
+                ", isShow=" + isShow +
+                ", preAmt=" + preAmt +
+                ", orgCode='" + orgCode + '\'' +
+                ", carTypeId=" + carTypeId +
+                ", color=" + color +
+                '}';
+    }
 }
