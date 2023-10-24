@@ -1,40 +1,115 @@
 package com.aws.carno.Utils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import static java.lang.Thread.sleep;
+
 
 public class testObject {
-    public static void main(String[] args) throws ParseException {
-        NET_DVR_TIME_V30 snapTime = new NET_DVR_TIME_V30();
-        snapTime.wYear = (short)18;
-        snapTime.byMonth = 12;
-        snapTime.byDay = 31;
-        snapTime.byHour = 23;
-        snapTime.byMinute = 59;
-        snapTime.bySecond = 59;
 
-        int year = snapTime.wYear + 2000; // 注意：NET_DVR_TIME_V30中的年份是从2000年开始的
-        int month = snapTime.byMonth - 1; // 注意：月份是从0开始的
-        int day = snapTime.byDay;
-        int hour = snapTime.byHour;
-        int min = snapTime.byMinute;
-        int sec = snapTime.bySecond;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
-        Date passTime = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
-        System.err.println(passTime);
-        System.err.println(passTime.getTime());
+    public static BlockingQueue<CameraData> msgQueue1 = new LinkedBlockingQueue<>();
+
+
+    public static void main(String[] args) throws InterruptedException {
+
+
+
+        // 打印摄像头数据
+        Thread thread=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    processing_Data();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+
+        fun();
+
     }
+
+    public static void fun() throws InterruptedException {
+        for(int i=0;i<100;i++) {
+            // 创建一个 CameraData 实例
+            CameraData camera1 = new CameraData("Camera 1", 1920, 1080, "192.168"+i+"100");
+            msgQueue1.add(camera1);
+            sleep(100);
+        }
+    }
+
+
+    public static void processing_Data() throws InterruptedException {
+        while(1==1)
+        {
+            if(msgQueue1.size()>0) {
+                CameraData cameraData ;
+                cameraData= msgQueue1.take();
+                System.out.println("Camera Name: " + cameraData.getCameraName());
+                System.out.println("Resolution Width: " + cameraData.getResolutionWidth());
+                System.out.println("Resolution Height: " + cameraData.getResolutionHeight());
+                System.out.println("IP Address: " + cameraData.getIpAddress());
+            }
+        }
+    }
+
 }
 
-class NET_DVR_TIME_V30 {
-    public short wYear;
-    public byte byMonth;
-    public byte byDay;
-    public byte byHour;
-    public byte byMinute;
-    public byte bySecond;
-    public byte byRes;
-    public short wMilliSec;
-    public byte[] byRes1 = new byte[2];
+class CameraData {
+    private String cameraName;
+    private int resolutionWidth;
+    private int resolutionHeight;
+    private String ipAddress;
+
+    public CameraData(String cameraName, int resolutionWidth, int resolutionHeight, String ipAddress) {
+        this.cameraName = cameraName;
+        this.resolutionWidth = resolutionWidth;
+        this.resolutionHeight = resolutionHeight;
+        this.ipAddress = ipAddress;
+    }
+
+    public String getCameraName() {
+        return cameraName;
+    }
+
+    public void setCameraName(String cameraName) {
+        this.cameraName = cameraName;
+    }
+
+    public int getResolutionWidth() {
+        return resolutionWidth;
+    }
+
+    public void setResolutionWidth(int resolutionWidth) {
+        this.resolutionWidth = resolutionWidth;
+    }
+
+    public int getResolutionHeight() {
+        return resolutionHeight;
+    }
+
+    public void setResolutionHeight(int resolutionHeight) {
+        this.resolutionHeight = resolutionHeight;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    @Override
+    public String toString() {
+        return "CameraData{" +
+                "cameraName='" + cameraName + '\'' +
+                ", resolutionWidth=" + resolutionWidth +
+                ", resolutionHeight=" + resolutionHeight +
+                ", ipAddress='" + ipAddress + '\'' +
+                '}';
+    }
 }

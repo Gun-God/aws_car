@@ -374,6 +374,8 @@ public class UnvCarNoCore {
         carNo.setCode(ip+"_"+carType[code]);
         rowValues[1] = new String(stPicData.szPassTime);
         carNo.setCreateTime(new Date());
+
+        //车道信息
         rowValues[2] = Integer.toString(stPicData.lLaneID);
         carNo.setLane(stPicData.lLaneID);
         rowValues[3] = arrPlateColor[iColorIndex];

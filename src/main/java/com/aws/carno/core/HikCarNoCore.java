@@ -37,7 +37,8 @@ public class HikCarNoCore {
     static HCNetSDK.FMSGCallBack fMSFCallBack = null;
     static HCNetSDK.FMSGCallBack_V31 fMSFCallBack_v31 = null;
     static String preNo;
-    public BlockingQueue<byte[]> msgQueue1 = new LinkedBlockingQueue<>();
+    public BlockingQueue<HCNetSDK.NET_ITS_PLATE_RESULT> msgQueue1 = new LinkedBlockingQueue<>();
+    public final String[] trans_array={"其他车型","小型车","大型车","行人触发","二轮车触发","三轮车触发"};
 
     String ip;
     short port;
@@ -52,7 +53,7 @@ public class HikCarNoCore {
         hikCarNoCore.preCheckDataMapper=this.preCheckDataMapper;
         hikCarNoCore.noService=this.noService;
     }
-
+    //这个代码用于手动抓拍
     public class CarFMSGCallBack implements HCNetSDK.FMSGCallBack {
 
         public final String[] trans_array={"其他车型","小型车","大型车","行人触发","二轮车触发","三轮车触发"};
@@ -185,156 +186,71 @@ public class HikCarNoCore {
 
 
 
+    public String savePic(HCNetSDK.NET_ITS_PLATE_RESULT strItsPlateResult) {
+        String file_url="";
+        for (int i = 0; i < strItsPlateResult.dwPicNum; i++) {
+            if (strItsPlateResult.struPicInfo[i].dwDataLen > 0) {
+                SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
+                String newName = sf.format(new Date());
+                FileOutputStream fout;
+                try {
+                    String filename = "E:/pic/" + newName + "_type[" + strItsPlateResult.struPicInfo[i].byType + "]_ItsPlate.jpg";
+                    fout = new FileOutputStream(filename);
+                    File file = new File(filename);
+                    if (!file.getParentFile().exists())
+                        file.mkdirs();
+                    if (!file.exists())
+                        file.createNewFile();
+                    fout = new FileOutputStream(filename);
+                    //将字节写入文件
+                    long offset = 0;
+                    ByteBuffer buffers = strItsPlateResult.struPicInfo[i].pBuffer.getByteBuffer(offset, strItsPlateResult.struPicInfo[i].dwDataLen);
+                    byte[] bytes = new byte[strItsPlateResult.struPicInfo[i].dwDataLen];
+                    buffers.rewind();
+                    buffers.get(bytes);
+                    fout.write(bytes);
+                    fout.close();
+
+//                      数据库操作
+                    if(i==1)//只保留车远景    也可以判断strItsPlateResult.struPicInfo[i].byType==1
+                    {
+                        file_url=filename;
+                    }
+                } catch (FileNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        return file_url;
+    }
+
 
     public class CarFMSGCallBack_V31 implements HCNetSDK.FMSGCallBack_V31 {
 
-        public final String[] trans_array={"其他车型","小型车","大型车","行人触发","二轮车触发","三轮车触发"};
 
         //报警信息回调函数
         public boolean invoke(int lCommand, HCNetSDK.NET_DVR_ALARMER pAlarmer, Pointer pAlarmInfo, int dwBufLen, Pointer pUser) {
-            AwsCarNo carNo=new AwsCarNo();
-            AwsPreCheckData pre=new AwsPreCheckData();
-            Date passTime=null;
             System.out.println("报警事件类型： lCommand:" + Integer.toHexString(lCommand));
-            String sTime;
-            String MonitoringSiteID;
             int laneInfo=-1;
             //lCommand是传的报警类型
             if (lCommand == HCNetSDK.COMM_ITS_PLATE_RESULT) {//交通抓拍结果(新报警信息)
                 HCNetSDK.NET_ITS_PLATE_RESULT strItsPlateResult = new HCNetSDK.NET_ITS_PLATE_RESULT();
-
                 strItsPlateResult.write();
 //              获取车辆信息指针
                 Pointer pItsPlateInfo = strItsPlateResult.getPointer();
                 pItsPlateInfo.write(0, pAlarmInfo.getByteArray(0, strItsPlateResult.size()), 0, strItsPlateResult.size());
                 strItsPlateResult.read();
-                try {
-                    //车牌信息
-                    String sLicense = new String(strItsPlateResult.struPlateInfo.sLicense, "GB2312");
-                    //车辆类型
-                    int VehicleType = (int)strItsPlateResult.struVehicleInfo.byVehicleType;
-                    //监控点编号
-                    MonitoringSiteID = new String(strItsPlateResult.byMonitoringSiteID);
-                    //车牌颜色
-                    int Vehicle_Plate_Color =(int)strItsPlateResult.struPlateInfo.byColor;
-                    //车道信息
-                    laneInfo = (int)strItsPlateResult.byDriveChan;
-                    //拍照时间
-                    //获取抓拍时间
-                    HCNetSDK.NET_DVR_TIME_V30 snapTime = strItsPlateResult.struSnapFirstPicTime;
-                    int year = snapTime.wYear; //
-                    int month = snapTime.byMonth - 1; // 注意：月份是从0开始的
-                    int day = snapTime.byDay;
-                    int hour = snapTime.byHour;
-                    int min = snapTime.byMinute;
-                    int sec = snapTime.bySecond;
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
-                    passTime = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
-                    //这里的passTime先不要插入 先从数据库中查询 之后再比较
 
-//                    captureTime = ;
+                msgQueue1.add(strItsPlateResult);
 
-                    System.out.println("车牌号：" + sLicense + ":车辆类型：" + VehicleType + "车速：" + strItsPlateResult.struVehicleInfo.wSpeed+"车道信息："+laneInfo+"车辆牌照颜色："+Vehicle_Plate_Color+" 车道信息："+laneInfo+" 抓拍时间："+passTime);
-                    //入库操作
-//                    carno表
-                    carNo.setCarNo(sLicense);
-                    //因为0蓝1黄 数据库种1蓝2黄
-                    carNo.setColor(Vehicle_Plate_Color+1);
-                    carNo.setCreateTime(new Date());
-                    carNo.setCode(ip+"_"+trans_array[VehicleType]);
-
-//                    precheck表
-                    pre.setCarNo(sLicense);
-                    //pre.setCreateTime(new Date());
-                    pre.setSpeed(Double.valueOf((double) strItsPlateResult.struVehicleInfo.wSpeed));
-//                  msgQueue1.add
-
-//                    车型需要由数字转换为车辆信息
-//                    carNo.setCode(ProcessCarMesUtil.convertVehicleTypeToString(VehicleType));
-//                    carNo.setLane()
-
-
-                } catch (IOException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-
-                /**
-                 * 报警图片保存，车牌，车辆图片
-                 */
-                for (int i = 0; i < strItsPlateResult.dwPicNum; i++) {
-                    if (strItsPlateResult.struPicInfo[i].dwDataLen > 0) {
-                        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
-                        String newName = sf.format(new Date());
-                        FileOutputStream fout;
-                        try {
-                            String filename = "E:/pic/" + newName + "_type[" + strItsPlateResult.struPicInfo[i].byType + "]_ItsPlate.jpg";
-                            fout = new FileOutputStream(filename);
-                            File file = new File(filename);
-                            if (!file.getParentFile().exists())
-                                file.mkdirs();
-                            if (!file.exists())
-                                file.createNewFile();
-                            fout = new FileOutputStream(filename);
-                            //将字节写入文件
-                            long offset = 0;
-                            ByteBuffer buffers = strItsPlateResult.struPicInfo[i].pBuffer.getByteBuffer(offset, strItsPlateResult.struPicInfo[i].dwDataLen);
-                            byte[] bytes = new byte[strItsPlateResult.struPicInfo[i].dwDataLen];
-                            buffers.rewind();
-                            buffers.get(bytes);
-                            fout.write(bytes);
-                            fout.close();
-
-//                      数据库操作
-                            if(i==1)//只保留车远景    也可以判断strItsPlateResult.struPicInfo[i].byType==1
-                            {
-                                carNo.setImg(filename);
-                                pre.setImg(filename);
-                            }
-                        } catch (FileNotFoundException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                //先获取离当前时间最近，且车道号一致的percheck数据，
-                int timeThreshold=2; //时间有效阈值为2秒
-                AwsPreCheckData pCData=hikCarNoCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getLane,laneInfo).isNull(AwsPreCheckData::getCarNo).orderByDesc(AwsPreCheckData::getPassTime).last("limit 1"));
-                //将percheck数据和目前拍摄数据的车道号进行匹配
-                if(pCData!=null)
-                {//当未查询到数据，则直接插入
-                    pre.setLane(laneInfo);
-                    pre.setPassTime(passTime);
-                    hikCarNoCore.preCheckDataMapper.insert(pre);
-                }
-                else {
-                    //判断是否在时间阈值中,超出阈值则抛弃
-                    // 创建日期格式
-                    Date wpTime=pCData.getPassTime();
-                    long interval=(passTime.getTime()-wpTime.getTime())/1000;
-                    if(interval<timeThreshold)
-                    {//则更新数据
-                        hikCarNoCore.preCheckDataMapper.update(pre,new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo,pCData));
-                    }
-                    else
-                    {//则插入数据
-                        pre.setLane(laneInfo);
-                        pre.setPassTime(passTime);
-                        hikCarNoCore.preCheckDataMapper.insert(pre);
-                    }
-                    //SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
-                }
-//                数据库操作
-                hikCarNoCore.noService.insertCarNo(carNo);
-            }
-            return true;
         }
+            return true;
+    }
+
     }
 
     public HikCarNoCore(String ip, short port,String user_name, String password) {
@@ -352,20 +268,6 @@ public class HikCarNoCore {
                 System.out.println("设置回调函数V31成功!");
             }
         }
-//        if (fMSFCallBack== null) {
-//            fMSFCallBack = new CarFMSGCallBack();
-//
-//            Pointer pUser2 = null;
-//            if(!hCNetSDK.NET_DVR_SetDVRMessageCallBack_V30(fMSFCallBack, pUser2))
-//            {
-//                System.out.println("设置回调函数失败!");
-//                return;
-//            }
-//            else{
-//                System.out.println("设置回调函数成功!");
-//            }
-
-//        }
 
 // 10.19调试 login_V40("192.10.12.245", (short) 8000, "admin", "admin12345");
         login_V40(ip, port, user_name,password);
@@ -376,15 +278,107 @@ public class HikCarNoCore {
             Thread thread=new Thread(new Runnable() {
                 @Override
                 public void run() {
+
                     processing_Data();
                 }
             });
             thread.start();
-
     }
 
-    public void processing_Data()
-    {
+    public void processing_Data() {
+
+//        先从队列中加载数据
+        try {
+
+            System.out.println("--------------海康摄像头处理线程运行了--------------");
+            while (true) {
+                if (msgQueue1.size() > 0) {
+                    AwsCarNo carNo = new AwsCarNo();
+                    AwsPreCheckData pre = new AwsPreCheckData();
+                    Date passTime = null;
+                    String MonitoringSiteID;
+                    int laneInfo = -1;
+                    //获得数据
+                    HCNetSDK.NET_ITS_PLATE_RESULT strItsPlateResult;
+                    strItsPlateResult = msgQueue1.take();
+
+                    //车牌信息
+                    String sLicense = new String(strItsPlateResult.struPlateInfo.sLicense, "GB2312");
+                    //车辆类型
+                    int VehicleType = (int) strItsPlateResult.struVehicleInfo.byVehicleType;
+                    //监控点编号
+                    MonitoringSiteID = new String(strItsPlateResult.byMonitoringSiteID);
+                    //车牌颜色
+                    int Vehicle_Plate_Color = (int) strItsPlateResult.struPlateInfo.byColor;
+                    //车道信息
+                    laneInfo = (int) strItsPlateResult.byDriveChan;
+                    //拍照时间
+                    //获取抓拍时间
+                    HCNetSDK.NET_DVR_TIME_V30 snapTime = strItsPlateResult.struSnapFirstPicTime;
+                    int year = snapTime.wYear; //
+                    int month = snapTime.byMonth - 1; // 注意：月份是从0开始的
+                    int day = snapTime.byDay;
+                    int hour = snapTime.byHour;
+                    int min = snapTime.byMinute;
+                    int sec = snapTime.bySecond;
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
+                    passTime = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
+                        //这里的passTime先不要插入 先从数据库中查询 之后再比较
+                     System.out.println("摄像头数据：车牌号：" + sLicense + ":车辆类型：" + VehicleType + "车速：" + strItsPlateResult.struVehicleInfo.wSpeed + "车道信息：" + laneInfo + "车辆牌照颜色：" + Vehicle_Plate_Color + " 车道信息：" + laneInfo + " 抓拍时间：" + passTime + "监控点编号：" + MonitoringSiteID);
+                        //入库操作
+//                    carno表
+                        carNo.setCarNo(sLicense);
+                        //因为0蓝1黄 数据库种1蓝2黄
+                        carNo.setColor(Vehicle_Plate_Color + 1);
+                        carNo.setCreateTime(new Date());
+                        carNo.setCode(ip + "_" + trans_array[VehicleType]);
+                        carNo.setLane(laneInfo);
+//                    precheck表
+                        pre.setCarNo(sLicense);
+                        //pre.setCreateTime(new Date());
+                        pre.setSpeed(Double.valueOf((double) strItsPlateResult.struVehicleInfo.wSpeed));
+                    /**
+                     * 报警图片保存，车牌，车辆图片
+                     */
+                    String fiile_url = savePic(strItsPlateResult);
+                    carNo.setImg(fiile_url);
+                    pre.setImg(fiile_url);
+
+                    //先获取离当前时间最近，且车道号一致的percheck数据，
+                    int timeThreshold = 2; //时间有效阈值为2秒
+                    AwsPreCheckData pCData = hikCarNoCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getLane, laneInfo).isNull(AwsPreCheckData::getCarNo).orderByDesc(AwsPreCheckData::getPassTime).last("limit 1"));
+
+                    System.err.println("匹配信息:" + pCData);
+
+                    //将percheck数据和目前拍摄数据的车道号进行匹配
+                    if (pCData != null) {//当未查询到数据，则直接插入
+                        pre.setLane(laneInfo);
+                        pre.setPassTime(passTime);
+                        hikCarNoCore.preCheckDataMapper.insert(pre);
+                    } else {
+                        //判断是否在时间阈值中,超出阈值则抛弃
+                        // 创建日期格式
+                        Date wpTime = pCData.getPassTime();
+                        long interval = (passTime.getTime() - wpTime.getTime()) / 1000;
+                        if (interval < timeThreshold && interval >= 0) {//则更新数据
+                            hikCarNoCore.preCheckDataMapper.update(pre, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, pCData));
+                        } else {//则插入数据
+                            pre.setLane(laneInfo);
+                            pre.setPassTime(passTime);
+                            hikCarNoCore.preCheckDataMapper.insert(pre);
+                        }
+                        //SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
+                    }
+//                对carno表实现数据库操作
+                    hikCarNoCore.noService.insertCarNo(carNo);
+
+                }
+
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
 
     }
 
