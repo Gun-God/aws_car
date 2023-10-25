@@ -187,6 +187,9 @@ public class RTXDataParse {
         int hour = oneBcdToDecimalInteger(byteArray[14]);
         int min = oneBcdToDecimalInteger(byteArray[15]);
         int sec = oneBcdToDecimalInteger(byteArray[16]);
+
+//        for(int i=0;i<b;i++)
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
         Date date = null;
         try {

@@ -17,11 +17,15 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Date;
 
 import static com.aws.carno.Utils.RTXDataParse.hexStrToByteArray;
 
@@ -71,7 +75,7 @@ public class CarWeightCore {
                     //TODO 将消息队列的消息转化成哈希码，后面利用哈希码取出哈希map中的唯一流水号
                     byte[] bytes = commUtil.msgQueue.take();
                     String hex = new BigInteger(1, bytes).toString(16);
-                    System.out.println(hex);
+//                    System.out.println(hex);
                     StringBuffer hex1 = new StringBuffer();
                     for (int i=0;i<hex.length();i+=2){
                         if(i+2<=hex.length()){
@@ -81,7 +85,19 @@ public class CarWeightCore {
 
 
                     }
+
+
                     System.out.println(hex1);
+
+                    BufferedWriter writer = new BufferedWriter(new FileWriter("E:/com_data/output.txt", true));
+
+                    writer.write(String.valueOf(hex1));
+                    writer.newLine(); // 写入换行
+                    writer.newLine(); // 写入换行
+
+                    // 在这里写入文件
+
+                    writer.close();
 
                     // System.err.println(new String(bytes, Charset.defaultCharset()));
                     byte[] bytes1=hexStrToByteArray(hex1.toString());
@@ -95,7 +111,7 @@ public class CarWeightCore {
                     System.err.println(preCheckData);
                     String preNo = StartCore.hashMap.get(hashCode);
 
-                    AwsCarTypeIdRelation relation = relationMapper.selectOne(new QueryWrapper<AwsCarTypeIdRelation>().lambda().eq(AwsCarTypeIdRelation::getVehType, preCheckData.getCarTypeId()));
+                    AwsCarTypeIdRelation relation = carWeightCore.relationMapper.selectOne(new QueryWrapper<AwsCarTypeIdRelation>().lambda().eq(AwsCarTypeIdRelation::getVehType, preCheckData.getCarTypeId()));
                     int carTypeId = 0;
                     if (relation != null) {
                         carTypeId = relation.getCarTypeId();
@@ -105,20 +121,26 @@ public class CarWeightCore {
                         preCheckData.setLimitAmt(carType.getLimitAmt());
                     else
                         preCheckData.setLimitAmt(0d);
+                    preCheckData.setCreateTime(new Date());
                     preCheckData.setCarTypeId(carTypeId);
                     //TODO 查重
-                    AwsPreCheckData p = carWeightCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
+//                    AwsPreCheckData p = carWeightCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
                     //TODO 如果是空的，则插入称重,最大限重，车辆类型等内容插入数据库
-                    if (p == null)
-                        carWeightCore.preCheckDataMapper.insert(preCheckData);
-                    else {
-                        carWeightCore.preCheckDataMapper.update(preCheckData, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
-                    }
+                    carWeightCore.preCheckDataMapper.insert(preCheckData);
+//                    sqlSession.commit();
+
+//                    AwsPreCheckData p = carWeightCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
+//                    System.err.println("p:" + p);
+//                    else {
+//                        carWeightCore.preCheckDataMapper.update(preCheckData, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
+//                    }
                     System.err.println("车道:" + preCheckData.getLane());
                 }
             }
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

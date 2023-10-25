@@ -118,14 +118,19 @@ public class StartCore implements CommandLineRunner {
             String password = scan.getPassword();
            // 10.19测试  HikCarNoCore hik = new HikCarNoCore("192.10.12.245", (short)8000);
             HikCarNoCore hik = new HikCarNoCore(ip, (short)port,user_name, password);
-
+hik.processing_Data();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             HikMaps.put(scan.getCode(), hik);
 
              }
     }
     @Override
     public void run(String... args) throws Exception {
-        UnvCarNoStart();
+//        UnvCarNoStart();
         HikCarNoStart();
         carWeighStart();
         //new ScoketWeightCore("192.10.12.243", 3132);
