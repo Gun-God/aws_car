@@ -330,6 +330,7 @@ public class HikCarNoCore {
         //设防
         setAlarm();
 
+
 //        在这里写个一直循环 处理数据
 //            Thread thread=new Thread(new Runnable() {
 //                @Override
@@ -408,13 +409,13 @@ public class HikCarNoCore {
                     pre.setImg(sLicense+File.separator+newName+".jpg");
 
                     //先获取离当前时间最近，且车道号一致的percheck数据，
-                    int timeThreshold = 2; //时间有效阈值为2秒
+                    int timeThreshold = 100; //时间有效阈值为2秒
                     AwsPreCheckData pCData = hikCarNoCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getLane, laneInfo).isNull(AwsPreCheckData::getCarNo).orderByDesc(AwsPreCheckData::getPassTime).last("limit 1"));
 
                     System.err.println("匹配信息:" + pCData);
 
                     //将percheck数据和目前拍摄数据的车道号进行匹配
-                    if (pCData != null) {//当未查询到数据，则直接插入
+                    if (pCData == null) {//当未查询到数据，则直接插入
                         pre.setLane(laneInfo);
                         pre.setPassTime(passTime);
                         hikCarNoCore.preCheckDataMapper.insert(pre);
@@ -424,7 +425,9 @@ public class HikCarNoCore {
                         Date wpTime = pCData.getPassTime();
                         long interval = (passTime.getTime() - wpTime.getTime()) / 1000;
                         if (interval < timeThreshold && interval >= 0) {//则更新数据
-                            hikCarNoCore.preCheckDataMapper.update(pre, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, pCData));
+//                            if( interval >= 0) {//则更新数据
+                                System.err.println("车重匹配！！！");
+                            hikCarNoCore.preCheckDataMapper.update(pre, new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, pCData.getPreNo()));
                         } else {//则插入数据
                             pre.setLane(laneInfo);
                             pre.setPassTime(passTime);

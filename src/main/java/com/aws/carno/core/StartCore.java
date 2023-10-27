@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -26,8 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
+@EnableAsync
 @Order(1)
 public class StartCore implements CommandLineRunner {
+//public class StartCore{
     public StartCore startCore;
 
     @Autowired
@@ -40,7 +44,13 @@ public class StartCore implements CommandLineRunner {
     public static Map<String, HikCarNoCore> HikMaps = new HashMap<>();
     public static ConcurrentHashMap<Integer,String> hashMap=new ConcurrentHashMap<>();
 
+    public StartCore()
+    {
 
+    }
+
+
+    @Async
     public void carWeighStart() {
         QueryWrapper<AwsScan> qw = new QueryWrapper<>();
         qw.eq("state", 1);
@@ -54,9 +64,15 @@ public class StartCore implements CommandLineRunner {
 
             AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getReCode()));
 
-            CarWeightCore cRead = new CarWeightCore();
+            CarWeightCore cRead = new CarWeightCore(scan.getPortName(), 115200, awsScan.getCode(), awsScan.getFactory());
+            cRead.startMain();//异步线程处理数据
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             //波特率    5600
-            cRead.startMain(scan.getPortName(), 115200, awsScan.getCode(), awsScan.getFactory());
+//           cRead.startMain();
             //cRead.startMain(scan.getPortName(), 5600, scan.getCode(), scan.getFactory());
 
         }
@@ -81,6 +97,8 @@ public class StartCore implements CommandLineRunner {
             UnvMaps.put(scan.getCode(), st);
         }
     }
+
+
     public void HikCarNoStart() {
         if (HikCarNoCore.hCNetSDK == null) {
             if (!HikCarNoCore.createSDKInstance()) {
@@ -118,7 +136,7 @@ public class StartCore implements CommandLineRunner {
             String password = scan.getPassword();
            // 10.19测试  HikCarNoCore hik = new HikCarNoCore("192.10.12.245", (short)8000);
             HikCarNoCore hik = new HikCarNoCore(ip, (short)port,user_name, password);
-hik.processing_Data();
+            hik.processing_Data();
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -131,8 +149,22 @@ hik.processing_Data();
     @Override
     public void run(String... args) throws Exception {
 //        UnvCarNoStart();
-        HikCarNoStart();
+//        Thread myThread = new Thread(new Runnable(){
+//            @Override
+//            public void run() {
+//                // 在 run() 方法中编写线程要执行的任务。
+//                carWeighStart();
+//            }
+//        });
+//        myThread.start();
+//        try {
+//            Thread.sleep(10000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        HikCarNoStart();
         carWeighStart();
+
         //new ScoketWeightCore("192.10.12.243", 3132);
 //        LedCore led=new LedCore();
 //        led.startMain("COM3",9600,"请苏FE1861进站检测");
