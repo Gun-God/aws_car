@@ -4,6 +4,7 @@ import com.aws.carno.Interface.HCNetSDK;
 import com.aws.carno.Utils.osSelect;
 import com.aws.carno.domain.AwsCarNo;
 import com.aws.carno.domain.AwsPreCheckData;
+import com.aws.carno.mapper.AwsCarNoMapper;
 import com.aws.carno.mapper.AwsPreCheckDataMapper;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
@@ -50,10 +51,13 @@ public class HikCarNoCore {
 //    AwsCarNoService noService;
     @Autowired
     public AwsPreCheckDataMapper preCheckDataMapper;
+    @Autowired
+    public AwsCarNoMapper  carNoMapper;
     @PostConstruct
     public void init(){
         hikCarNoCore=this;
         hikCarNoCore.preCheckDataMapper=this.preCheckDataMapper;
+        hikCarNoCore.carNoMapper=this.carNoMapper;
 //        hikCarNoCore.noService=this.noService;
     }
     public HikCarNoCore(){
@@ -113,7 +117,7 @@ public class HikCarNoCore {
                     carNo.setCarNo(sLicense);
                     //因为0蓝1黄 数据库种1蓝2黄
                     carNo.setColor(Vehicle_Plate_Color + 1);
-                    carNo.setCreateTime(new Date());
+                    carNo.setCreateTime(passTime);
                     carNo.setCode(ip + "_" + trans_array[VehicleType]);
                     carNo.setLane(laneInfo);
 //                    precheck表
@@ -151,6 +155,7 @@ public class HikCarNoCore {
                 if (pCData != null) {//当未查询到数据，则直接插入
                     pre.setLane(laneInfo);
                     pre.setPassTime(passTime);
+                    pre.setCreateTime(passTime);
                     hikCarNoCore.preCheckDataMapper.insert(pre);
                 } else {
                     //判断是否在时间阈值中,超出阈值则抛弃
@@ -162,6 +167,7 @@ public class HikCarNoCore {
                     } else {//则插入数据
                         pre.setLane(laneInfo);
                         pre.setPassTime(passTime);
+                        pre.setCreateTime(passTime);
                         hikCarNoCore.preCheckDataMapper.insert(pre);
                     }
                     //SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
@@ -385,28 +391,28 @@ public class HikCarNoCore {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
                     passTime = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
                         //这里的passTime先不要插入 先从数据库中查询 之后再比较
-                     System.out.println("摄像头数据：车牌号：" + sLicense + ":车辆类型：" + VehicleType + "车速：" + strItsPlateResult.struVehicleInfo.wSpeed + "车道信息：" + laneInfo + "车辆牌照颜色：" + Vehicle_Plate_Color + " 车道信息：" + laneInfo + " 抓拍时间：" + passTime + "监控点编号：" + MonitoringSiteID);
+                    System.out.println("摄像头数据：车牌号：" + sLicense + ":车辆类型：" + VehicleType + "车速：" + strItsPlateResult.struVehicleInfo.wSpeed + "车道信息：" + laneInfo + "车辆牌照颜色：" + Vehicle_Plate_Color + " 车道信息：" + laneInfo + " 抓拍时间：" + passTime + "监控点编号：" + MonitoringSiteID);
                         //入库操作
 //                    carno表
-                        carNo.setCarNo(sLicense);
-                        //因为0蓝1黄 数据库种1蓝2黄
-                        carNo.setColor(Vehicle_Plate_Color + 1);
-                        carNo.setCreateTime(new Date());
-                        carNo.setCode(ip + "_" + trans_array[VehicleType]);
-                        carNo.setLane(laneInfo);
-//                    precheck表
-                        pre.setCarNo(sLicense);
-                        //pre.setCreateTime(new Date());
-                        pre.setSpeed(Double.valueOf((double) strItsPlateResult.struVehicleInfo.wSpeed));
+                    carNo.setCarNo(sLicense);
+                    //因为0蓝1黄 数据库种1蓝2黄
+                    carNo.setColor(Vehicle_Plate_Color + 1);
+                    carNo.setCreateTime(passTime);
+                    carNo.setCode(ip + "_" + trans_array[VehicleType]);
+                    carNo.setLane(laneInfo);
+                    //                    precheck表
+                    pre.setCarNo(sLicense);
+                    //pre.setCreateTime(new Date());
+                    pre.setSpeed(Double.valueOf((double) strItsPlateResult.struVehicleInfo.wSpeed));
                     /**
                      * 报警图片保存，车牌，车辆图片
                      */
-                 //   String fiile_url = savePic(strItsPlateResult);
-//
-//                    carNo.setImg(file_url);
+
                     SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
                     String newName = sf.format(passTime);
                     pre.setImg(sLicense+File.separator+newName+".jpg");
+                    carNo.setImg(sLicense+File.separator+newName+".jpg");
+
 
                     //先获取离当前时间最近，且车道号一致的percheck数据，
                     int timeThreshold = 100; //时间有效阈值为2秒
@@ -418,6 +424,7 @@ public class HikCarNoCore {
                     if (pCData == null) {//当未查询到数据，则直接插入
                         pre.setLane(laneInfo);
                         pre.setPassTime(passTime);
+                        pre.setCreateTime(passTime);
                         hikCarNoCore.preCheckDataMapper.insert(pre);
                     } else {
                         //判断是否在时间阈值中,超出阈值则抛弃
@@ -431,12 +438,12 @@ public class HikCarNoCore {
                         } else {//则插入数据
                             pre.setLane(laneInfo);
                             pre.setPassTime(passTime);
+                            pre.setCreateTime(passTime);
                             hikCarNoCore.preCheckDataMapper.insert(pre);
                         }
-                        //SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
                     }
 //                对carno表实现数据库操作
-//                    hikCarNoCore.noService.insertCarNo(carNo);
+                    hikCarNoCore.carNoMapper.insert(carNo);
 
                 }
 

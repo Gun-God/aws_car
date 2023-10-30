@@ -26,14 +26,16 @@ public class RTXDataParse {
         if (str.length() == 0) {
             return new byte[0];
         }
-        byte[] byteArray = new byte[str.length() / 3];
+        int new_length;
+        int yushu=str.length()%3;
+        if(yushu!=0)
+            new_length=str.length()/3+1;
+        else
+            new_length=str.length()/3;
+
+        byte[] byteArray = new byte[new_length];
         for (int i = 0; i < byteArray.length; i++) {
-//            int l=0;
-//            if (i%2==0)
-//                l=2*i;
-//            else
-//                l=2*i+1;
-            String subStr = str.substring(3 * i, 3 * i + 2);
+            String subStr = str.substring(3 * i, 3 * i+2 );
             byteArray[i] = ((byte) Integer.parseInt(subStr, 16));
         }
         return byteArray;
@@ -134,32 +136,41 @@ public class RTXDataParse {
 
     public static int getLane(byte b) {
         int by = oneBcdToDecimalInteger(b);
-        int lane = 1;
-        switch (by) {
-            case 11:
-                lane = 2;
-                break;
-            case 22:
-                lane = 3;
-                break;
-            case 33:
-                lane = 4;
-                break;
-            case 44:
-                lane = 5;
-                break;
-            case 55:
-                lane = 6;
-                break;
-            case 66:
-                lane = 7;
-                break;
-            case 77:
-                lane = 8;
-                break;
-            default:
-                break;
+        int lane=1;
+        if(by<10)
+        {
+            lane=1;
         }
+        else{
+            lane=by/10;
+            lane=lane+1;
+        }
+//
+//        switch (by) {
+//            case 11:
+//                lane = 2;
+//                break;
+//            case 22:
+//                lane = 3;
+//                break;
+//            case 33:
+//                lane = 4;
+//                break;
+//            case 44:
+//                lane = 5;
+//                break;
+//            case 55:
+//                lane = 6;
+//                break;
+//            case 66:
+//                lane = 7;
+//                break;
+//            case 77:
+//                lane = 8;
+//                break;
+//            default:
+//                break;
+//        }
 
         return lane;
 
@@ -176,7 +187,7 @@ public class RTXDataParse {
         AwsPreCheckData pre = new AwsPreCheckData();
         //获取车道数据
         int lane = getLane(byteArray[1]);
-        pre.setLane(lane);
+        pre.setLane(lane);//车道算法需要修改
         //获取车速
         int speed = byteArray[5];
         pre.setSpeed((double) speed);
@@ -215,7 +226,7 @@ public class RTXDataParse {
         }
         pre.setWeight((double)total);
 
-        BigDecimal b1 = BigDecimal.valueOf(((double) total / 1000) * 100);
+        BigDecimal b1 = BigDecimal.valueOf(((double) total / 1000));
         double preAmt = b1.setScale(2, RoundingMode.HALF_UP).doubleValue();
         pre.setPreAmt(preAmt);
         return pre;

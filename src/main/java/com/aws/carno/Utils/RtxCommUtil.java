@@ -35,6 +35,9 @@ public class RtxCommUtil implements SerialPortEventListener {
     public BlockingQueue<byte[]> msgQueue = new LinkedBlockingQueue<>();
     String code;
     int factory;
+    ArrayList<Byte> data_list = new ArrayList<Byte>();
+    int maxsize=0;
+    int length=0;
 
     public RtxCommUtil(CommPortIdentifier temp, String portName, int bits, int type, String code, int factory) {
         this.type = type;
@@ -74,6 +77,97 @@ public class RtxCommUtil implements SerialPortEventListener {
         }
     }
 
+    //
+    public void process_readBuffer(byte[] buffer,int len)
+    {
+
+        int data_pack_size=0;
+        int invalid_index=0;
+
+        if(!data_list.isEmpty())
+        {
+            invalid_index=1;
+        }
+
+        for(int i=0;i<len;i++)
+        {
+            //说明是新的数据包
+            if(buffer[i]==-1)
+            {
+                data_pack_size=len-i;
+                invalid_index=1;
+                //清空列表和length
+                maxsize=18;
+                length = 0;
+                data_list.clear();
+                data_list.add(buffer[i]);
+                length++;
+                i++;
+            }
+            if(invalid_index==1)
+            {
+                //说明数据包有效
+                //只需要有效数据位的数据，剩下的数据就不存了
+                if(length<maxsize)
+                {
+
+                    data_list.add(buffer[i]);
+                    length++;
+                    if(length==3)
+                    {
+                        //检查固定值是不是1
+                       if(data_list.get(2)!=1)
+                       {
+                           invalid_index=0;
+                           maxsize=0;
+                           length=0;
+                           data_list.clear();
+                           data_pack_size=0;
+                       }
+
+                    }
+                    if(length==18)//轴数，则扩大maxsize
+                    {
+                        int axis=data_list.get(17)/10;
+                        maxsize=18+9*axis;
+                    }
+                }
+                 if(length==maxsize)
+                {//最后一位
+                    invalid_index=0;
+                    byte[] new_buffers=new byte[maxsize];
+                    for(int j=0;j<maxsize;j++)
+                    {
+                        new_buffers[j]=data_list.get(j);
+                        //缺少添加队列
+                    }
+                    if (type == 1){
+                        //生成唯一流水号
+                        String preNo = StringUtil.genNo();
+                        //将称台返回数据临时存储
+                        StartCore.hashMap.put(Arrays.hashCode(new_buffers),preNo);
+//                                if (factory == 1) {
+//                                    UnvCarNoCore unv = StartCore.UnvMaps.get(code);
+//                                    //接收到称台数据 调用宇视摄像头异步抓拍;
+//                                    unv.CaptureSyncAction(preNo);
+//                                } else if (factory == 2) {
+//                                    HikCarNoCore hik = StartCore.HikMaps.get(code);
+//                                    //接收到称台数据 调用海康摄像头异步抓拍;
+//                                   // hik.startListen(preNo);
+//                                }
+                        msgQueue.add(new_buffers);
+                    }
+                    data_list.clear();
+                    length=0;
+                    maxsize=0;
+
+                }
+
+            }
+        }
+
+    }
+
     //TODO 处理串口的函数
     @Override
     public void serialEvent(SerialPortEvent event) {
@@ -96,12 +190,17 @@ public class RtxCommUtil implements SerialPortEventListener {
                     while (inputStream.available() > 0) {
                         System.err.println("");
                         numBytes = inputStream.read(readBuffer);
+                        //
+                        //byte[] final_readBuffer=process_readBuffer(readBuffer, numBytes);
+
                         if (numBytes > 0) {
                             if (type == 1){
+                                process_readBuffer(readBuffer, numBytes);
+
                                 //生成唯一流水号
-                                String preNo = StringUtil.genNo();
+                                //String preNo = StringUtil.genNo();
                                 //将称台返回数据临时存储
-                                StartCore.hashMap.put(Arrays.hashCode(readBuffer),preNo);
+                                //StartCore.hashMap.put(Arrays.hashCode(readBuffer),preNo);
 //                                if (factory == 1) {
 //                                    UnvCarNoCore unv = StartCore.UnvMaps.get(code);
 //                                    //接收到称台数据 调用宇视摄像头异步抓拍;
@@ -111,7 +210,7 @@ public class RtxCommUtil implements SerialPortEventListener {
 //                                    //接收到称台数据 调用海康摄像头异步抓拍;
 //                                   // hik.startListen(preNo);
 //                                }
-                                msgQueue.add(readBuffer);
+                               // msgQueue.add(readBuffer);
                             }
                             readBuffer = new byte[1024];//
                             // 重新构造缓冲对象，否则有可能会影响接下来接收的数据

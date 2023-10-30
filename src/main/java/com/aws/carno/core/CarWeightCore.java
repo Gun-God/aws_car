@@ -110,22 +110,14 @@ public class CarWeightCore {
                     System.out.println(hex1);
 
 //                    BufferedWriter writer = new BufferedWriter(new FileWriter("E:/com_data/output.txt", true));
-//
 //                    writer.write(String.valueOf(hex1));
 //                    writer.newLine(); // 写入换行
 //                    writer.newLine(); // 写入换行
-//
 //                    // 在这里写入文件
-//
 //                    writer.close();
 
                     // System.err.println(new String(bytes, Charset.defaultCharset()));
                     byte[] bytes1=hexStrToByteArray(hex1.toString());
-//                    for(int i=0;i<bytes1.length;i++)
-//                    {
-//                        System.err.print(bytes[i]+" ");
-//                    }
-//                    System.err.println();
 
                     int hashCode= Arrays.hashCode(bytes);
                     //将称台字节数据解析到实体类
@@ -151,9 +143,11 @@ public class CarWeightCore {
                         preCheckData.setLimitAmt(carType.getLimitAmt());
                     else
                         preCheckData.setLimitAmt(0d);
-                    preCheckData.setCreateTime(new Date());
+//                    preCheckData.setCreateTime(new Date());
+                    preCheckData.setCreateTime(preCheckData.getPassTime());
                     preCheckData.setCarTypeId(carTypeId);
                     preCheckData.setPreNo(preNo);
+                    preCheckData.setOrgCode("027");
 
 //                    long inset_db=System.currentTimeMillis();
 
