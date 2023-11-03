@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
@@ -30,6 +31,7 @@ import java.util.Date;
  * @date : 2023/06/12 12:09
  */
 @Slf4j
+@Component
 public class UnvCarNoCore {
     public static UnvCarNoCore unvCarNoCore;
     private static final Logger LOGGER = LogManager.getLogger(UnvCarNoCore.class.getName());
@@ -55,6 +57,8 @@ public class UnvCarNoCore {
         unvCarNoCore.preCheckDataMapper=this.preCheckDataMapper;
         unvCarNoCore.noService=this.noService;
     }
+
+
 
 
     //TODO 获取到抓拍数据（包括车辆颜色，车牌号）后，对数据进行进一步的处理

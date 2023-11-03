@@ -5,13 +5,10 @@ import com.aws.carno.Utils.RTXDataParse;
 import com.aws.carno.Utils.RtxCommUtil;
 import com.aws.carno.Utils.RxtxBuilder;
 import com.aws.carno.Utils.StringUtil;
-import com.aws.carno.domain.AwsCarType;
-import com.aws.carno.domain.AwsCarTypeIdRelation;
-import com.aws.carno.domain.AwsPreCheckData;
-import com.aws.carno.mapper.AwsCarTypeIdRelationMapper;
-import com.aws.carno.mapper.AwsCarTypeMapper;
-import com.aws.carno.mapper.AwsPreCheckDataMapper;
+import com.aws.carno.domain.*;
+import com.aws.carno.mapper.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -37,7 +34,7 @@ import static com.aws.carno.Utils.RTXDataParse.hexStrToByteArray;
  * @date : 2023/06/20 11:21
  */
 @Component
-public class CarWeightCore {
+public class CarWeightCore implements Runnable{
 
     public static CarWeightCore carWeightCore;
     @Autowired
@@ -45,7 +42,12 @@ public class CarWeightCore {
     @Autowired
     public AwsPreCheckDataMapper preCheckDataMapper;
     @Autowired
+    public AwsPreCheckDataHistoryMapper preCheckDataHistoryMapper;
+    @Autowired
     public  AwsCarTypeMapper carTypeMapper;
+//    @Autowired
+//    public AwsTempWeightDataMapper tempWeightDataMapper;
+
 
     public RtxCommUtil commUtil;
 
@@ -55,6 +57,8 @@ public class CarWeightCore {
         carWeightCore.preCheckDataMapper = this.preCheckDataMapper;
         carWeightCore.relationMapper = this.relationMapper;
         carWeightCore.carTypeMapper = this.carTypeMapper;
+        carWeightCore.preCheckDataHistoryMapper=this.preCheckDataHistoryMapper;
+//        carWeightCore.tempWeightDataMapper = this.tempWeightDataMapper;
     }
     public CarWeightCore(){
 
@@ -74,8 +78,13 @@ public class CarWeightCore {
         // TODO Auto-generated method stub
     }
 
+//    public void test_insert_weigth()
+//    {
+//        AwsTempWeightData tempWeightData = new AwsTempWeightData();
+//        tempWeightData.setLane(1);
+//        carWeightCore.tempWeightDataMapper.insert(tempWeightData);
+//    }
 
-    @Async
     public void startMain() {
         //开启串口
 //        RtxCommUtil commUtil = RxtxBuilder.init(name, bits, 1, code, factory);
@@ -87,12 +96,8 @@ public class CarWeightCore {
             while (true) {
                 // 如果堵塞队列中存在数据就将其输出
                 if (this.commUtil.msgQueue.size() > 0) {
-
-//                    long time_start=System.currentTimeMillis();
-
                     //TODO 将消息队列的消息转化成哈希码，后面利用哈希码取出哈希map中的唯一流水号
                     byte[] bytes = this.commUtil.msgQueue.take();
-
 
                     String hex = new BigInteger(1, bytes).toString(16);
 //                    System.out.println(hex);
@@ -102,11 +107,7 @@ public class CarWeightCore {
                             hex1.append(hex.substring(i,i+2));
                             hex1.append(" ");
                         }
-
-
                     }
-
-
                     System.out.println(hex1);
 
 //                    BufferedWriter writer = new BufferedWriter(new FileWriter("E:/com_data/output.txt", true));
@@ -122,6 +123,11 @@ public class CarWeightCore {
                     int hashCode= Arrays.hashCode(bytes);
                     //将称台字节数据解析到实体类
                     AwsPreCheckData preCheckData = RTXDataParse.byteArrayToObjData(bytes1);
+                    AwsPreCheckDataHistory preHis = new AwsPreCheckDataHistory();
+                    System.out.println("预见复制1"+preCheckData.getPassTime());
+                    BeanUtils.copyProperties(preCheckData,preHis);
+                    System.out.println("预见复制2"+preHis.getPassTime());
+                    System.out.println("预见复制3"+preCheckData.getPassTime());
 
 
 //                    long time_prase=System.currentTimeMillis();
@@ -139,27 +145,41 @@ public class CarWeightCore {
                         carTypeId = relation.getCarTypeId();
                     }
                     AwsCarType carType = carWeightCore.carTypeMapper.selectById(carTypeId);
-                    if (carType != null)
+                    if (carType != null){
                         preCheckData.setLimitAmt(carType.getLimitAmt());
+                        preHis.setLimitAmt(carType.getLimitAmt());
+                    }
+
                     else
+                    {
                         preCheckData.setLimitAmt(0d);
+                        preHis.setLimitAmt(0d);
+                    }
+
 //                    preCheckData.setCreateTime(new Date());
                     preCheckData.setCreateTime(preCheckData.getPassTime());
                     preCheckData.setCarTypeId(carTypeId);
                     preCheckData.setPreNo(preNo);
                     preCheckData.setOrgCode("027");
+                    preHis.setCreateTime(preHis.getPassTime());
+                    preHis.setCarTypeId(carTypeId);
+                    preHis.setPreNo(preNo);
+                    preHis.setOrgCode("027");
+
+
 
 //                    long inset_db=System.currentTimeMillis();
 
                     //TODO 如果是空的，则插入称重,最大限重，车辆类型等内容插入数据库
 //                    if(preCheckData.getWeight()!=0 && preCheckData.getWeight() <10000)
                         carWeightCore.preCheckDataMapper.insert(preCheckData);
+                        carWeightCore.preCheckDataHistoryMapper.insert(preHis);
 
 //                    long inset_db_over=System.currentTimeMillis();
 //                    System.out.println("称台数据入库时间"+(inset_db_over)+"   "+(time_prase)+"  "+(inset_db_over-time_prase));
 
-                    long inset_db_over=System.currentTimeMillis();
-                    System.out.println("称台数据入库"+inset_db_over);
+//                    long inset_db_over=System.currentTimeMillis();
+//                    System.out.println("称台数据入库"+inset_db_over);
 //                    sqlSession.commit();
 
 //                    AwsPreCheckData p = carWeightCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getPreNo, preNo));
@@ -176,4 +196,8 @@ public class CarWeightCore {
 
     }
 
+    @Override
+    public void run() {
+        startMain();
+    }
 }

@@ -1,42 +1,33 @@
-[2023-10-26 09:51:46.712][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/zlib1.dll], hHandleRet[1348927488]
-[2023-10-26 09:51:46.712][INF] The COM:HCCoreBase ver is 6.1.4.15, 2020_03_05. Async:1.
-[2023-10-26 09:51:46.712][INF] The COM:Core ver is 6.1.9.48, 2023_04_10. Async:1.
-[2023-10-26 09:51:46.712][INF] This HCNetSDK ver is 6.1.9.48 Ver 2023_04_10.
-[2023-10-26 09:51:47.440][INF] Login dev 192.10.12.245:8000.
-[2023-10-26 09:51:47.440][INF] dwTotalNum[2048]
-[2023-10-26 09:51:47.461][INF] Private connect 192.10.12.245:8000 sock=2952 this=0x28ed9e44 cmd=0x10000 port=50112
-[2023-10-26 09:51:47.461][INF] LogonDev1 in[192.10.12.245:8000]
-[2023-10-26 09:51:47.462][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/libcrypto-1_1-x64.dll], hHandleRet[2085421056]
-[2023-10-26 09:51:47.462][DBG] Load [libcrypto-1_1-x64.dll] SUCC, Real Path[C:\IDEAProj\Projects\aws_car\libs\hik\windows\libcrypto-1_1-x64.dll]
-[2023-10-26 09:51:47.464][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/libssl-1_1-x64.dll], hHandleRet[-1199636480]
-[2023-10-26 09:51:47.464][DBG] Load [libssl-1_1-x64.dll] SUCC, Real Path[C:\IDEAProj\Projects\aws_car\libs\hik\windows\libssl-1_1-x64.dll]
-[2023-10-26 09:51:47.464][INF] SSLTRANSAPI::IsAllAPILoaded, SSL_library_init Unload
-[2023-10-26 09:51:47.464][INF] OpenSSL, Not All Function Loaded!
-[2023-10-26 09:51:47.464][INF] SSLTRANSAPI::PrintVersion, OpenSSL version info [OpenSSL 1.1.1l  24 Aug 2021]
-[2023-10-26 09:51:47.464][INF] CSSLTrans::SSLCtxInit, dwSSLVersion[6], m_fnTLSServerMethod
-[2023-10-26 09:51:47.466][ERR] CSSLTrans::SSLTrans_CTX_Load_CA, invalid path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/cert/\]
-[2023-10-26 09:51:47.880][DBG] CComBase::Load, Load szDllPath[C:/IDEAProj/Projects/aws_car/libs/hik/windows/HCNetSDKCom/HCAlarm.dll] SUCC
-[2023-10-26 09:51:47.880][INF] AbilityAnalyze---Init-- start
-[2023-10-26 09:51:47.893][INF] The COM:HCAlarm ver is 6.1.9.48, 2023_04_10.
-[2023-10-26 09:51:47.917][INF] Private connect 192.10.12.245:8000 sock=3044 this=0x28ed9e44 cmd=0x111020 port=50118
-[2023-10-26 09:51:48.200][INF] Alarm[0] IP[192.10.12.245] data_len[991689] alarm_len[991689] status[170]
-[2023-10-26 09:51:50.245][INF] Alarm[0] IP[192.10.12.245] data_len[996082] alarm_len[996082] status[170]
-[2023-10-26 09:51:52.350][INF] Alarm[0] IP[192.10.12.245] data_len[1004862] alarm_len[1004862] status[170]
-[2023-10-26 09:51:56.807][INF] Alarm[0] IP[192.10.12.245] data_len[934655] alarm_len[934655] status[170]
-[2023-10-26 09:51:59.014][INF] Alarm[0] IP[192.10.12.245] data_len[1031905] alarm_len[1031905] status[170]
-[2023-10-26 09:51:59.832][INF] Alarm[0] IP[192.10.12.245] data_len[1013107] alarm_len[1013107] status[170]
-[2023-10-26 09:52:05.971][INF] Alarm[0] IP[192.10.12.245] data_len[982548] alarm_len[982548] status[170]
-[2023-10-26 09:52:07.385][INF] Alarm[0] IP[192.10.12.245] data_len[966749] alarm_len[966749] status[170]
-[2023-10-26 09:52:08.828][INF] Alarm[0] IP[192.10.12.245] data_len[955470] alarm_len[955470] status[170]
-[2023-10-26 09:52:12.653][INF] Alarm[0] IP[192.10.12.245] data_len[1017588] alarm_len[1017588] status[170]
-[2023-10-26 09:52:13.410][INF] Alarm[0] IP[192.10.12.245] data_len[1023649] alarm_len[1023649] status[170]
-[2023-10-26 09:52:14.473][INF] Alarm[0] IP[192.10.12.245] data_len[852635] alarm_len[852635] status[170]
-[2023-10-26 09:52:15.319][INF] Alarm[0] IP[192.10.12.245] data_len[913500] alarm_len[913500] status[170]
-[2023-10-26 09:52:16.244][INF] Alarm[0] IP[192.10.12.245] data_len[1100519] alarm_len[1100519] status[170]
-[2023-10-26 09:52:18.345][INF] Alarm[0] IP[192.10.12.245] data_len[1216566] alarm_len[1216566] status[170]
-[2023-10-26 09:52:19.206][INF] Alarm[0] IP[192.10.12.245] data_len[1219964] alarm_len[1219964] status[170]
-[2023-10-26 09:52:20.141][INF] Alarm[0] IP[192.10.12.245] data_len[976186] alarm_len[976186] status[170]
-[2023-10-26 09:52:21.147][INF] Alarm[0] IP[192.10.12.245] data_len[892778] alarm_len[892778] status[170]
-[2023-10-26 09:52:23.729][INF] Alarm[0] IP[192.10.12.245] data_len[885009] alarm_len[885009] status[170]
-[2023-10-26 09:52:24.651][INF] Alarm[0] IP[192.10.12.245] data_len[950949] alarm_len[950949] status[170]
-[2023-10-26 09:52:25.750][INF] Alarm[0] IP[192.10.12.245] data_len[983404] alarm_len[983404] status[170]
+[2023-11-02 16:34:41.080][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/zlib1.dll], hHandleRet[1420623872]
+[2023-11-02 16:34:41.080][INF] The COM:HCCoreBase ver is 6.1.4.15, 2020_03_05. Async:1.
+[2023-11-02 16:34:41.080][INF] The COM:Core ver is 6.1.9.48, 2023_04_10. Async:1.
+[2023-11-02 16:34:41.080][INF] This HCNetSDK ver is 6.1.9.48 Ver 2023_04_10.
+[2023-11-02 16:34:41.951][INF] Login dev 192.168.3.4:8000.
+[2023-11-02 16:34:41.951][INF] dwTotalNum[2048]
+[2023-11-02 16:34:42.048][INF] Private connect 192.168.3.4:8000 sock=3004 this=0x251799d4 cmd=0x10000 port=13428
+[2023-11-02 16:34:42.048][INF] LogonDev1 in[192.168.3.4:8000]
+[2023-11-02 16:34:42.050][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/libcrypto-1_1-x64.dll], hHandleRet[-998440960]
+[2023-11-02 16:34:42.050][DBG] Load [libcrypto-1_1-x64.dll] SUCC, Real Path[C:\IDEAProj\Projects\aws_car\libs\hik\windows\libcrypto-1_1-x64.dll]
+[2023-11-02 16:34:42.051][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/libssl-1_1-x64.dll], hHandleRet[-980221952]
+[2023-11-02 16:34:42.051][DBG] Load [libssl-1_1-x64.dll] SUCC, Real Path[C:\IDEAProj\Projects\aws_car\libs\hik\windows\libssl-1_1-x64.dll]
+[2023-11-02 16:34:42.051][INF] SSLTRANSAPI::IsAllAPILoaded, SSL_library_init Unload
+[2023-11-02 16:34:42.051][INF] OpenSSL, Not All Function Loaded!
+[2023-11-02 16:34:42.051][INF] SSLTRANSAPI::PrintVersion, OpenSSL version info [OpenSSL 1.1.1l  24 Aug 2021]
+[2023-11-02 16:34:42.051][INF] CSSLTrans::SSLCtxInit, dwSSLVersion[6], m_fnTLSServerMethod
+[2023-11-02 16:34:42.054][ERR] CSSLTrans::SSLTrans_CTX_Load_CA, invalid path[C:/IDEAProj/Projects/aws_car/libs/hik/windows/cert/\]
+[2023-11-02 16:34:42.719][DBG] CComBase::Load, Load szDllPath[C:/IDEAProj/Projects/aws_car/libs/hik/windows/HCNetSDKCom/HCAlarm.dll] SUCC
+[2023-11-02 16:34:42.719][INF] AbilityAnalyze---Init-- start
+[2023-11-02 16:34:42.733][INF] The COM:HCAlarm ver is 6.1.9.48, 2023_04_10.
+[2023-11-02 16:34:42.823][INF] Private connect 192.168.3.4:8000 sock=3084 this=0x251799d4 cmd=0x111020 port=13441
+[2023-11-02 16:34:43.145][INF] Login dev 192.168.3.2:8000.
+[2023-11-02 16:34:43.261][INF] Private connect 192.168.3.2:8000 sock=3112 this=0x2517a140 cmd=0x10000 port=13443
+[2023-11-02 16:34:43.261][INF] LogonDev1 in[192.168.3.2:8000]
+[2023-11-02 16:34:43.682][INF] Login dev 192.168.3.3:8000.
+[2023-11-02 16:34:43.795][INF] Private connect 192.168.3.3:8000 sock=3036 this=0x2517a140 cmd=0x10000 port=13444
+[2023-11-02 16:34:43.795][INF] LogonDev1 in[192.168.3.3:8000]
+[2023-11-02 16:34:45.318][INF] Alarm[0] IP[192.168.3.4] data_len[443671] alarm_len[443671] status[170]
+[2023-11-02 16:35:04.859][INF] Alarm[0] IP[192.168.3.4] data_len[570585] alarm_len[570585] status[170]
+[2023-11-02 16:35:10.931][INF] Alarm[0] IP[192.168.3.4] data_len[594768] alarm_len[594768] status[170]
+[2023-11-02 16:35:17.781][INF] Alarm[0] IP[192.168.3.4] data_len[551903] alarm_len[551903] status[170]
+[2023-11-02 16:35:49.979][INF] Alarm[0] IP[192.168.3.4] data_len[625512] alarm_len[625512] status[170]
+[2023-11-02 16:35:56.271][INF] Alarm[0] IP[192.168.3.4] data_len[667274] alarm_len[667274] status[170]

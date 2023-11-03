@@ -2,8 +2,15 @@ package com.aws.carno.core;
 
 import com.aws.carno.Interface.HCNetSDK;
 import com.aws.carno.Interface.ImosSdkInterface;
+import com.aws.carno.domain.AwsPreCheckData;
 import com.aws.carno.domain.AwsScan;
+import com.aws.carno.domain.AwsTempCarnoData;
+import com.aws.carno.domain.AwsTempWeightData;
+import com.aws.carno.mapper.AwsPreCheckDataMapper;
 import com.aws.carno.mapper.AwsScanMapper;
+import com.aws.carno.mapper.AwsTempCarnoDataMapper;
+import com.aws.carno.mapper.AwsTempWeightDataMapper;
+import com.aws.carno.service.AwsTempWeightDataService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sun.jna.Pointer;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +22,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +44,13 @@ public class StartCore implements CommandLineRunner {
 
     @Autowired
     AwsScanMapper scanMapper;
+    @Autowired
+    AwsTempWeightDataMapper tempWeightDataMapper;
+    @Autowired
+    AwsTempCarnoDataMapper tempCarnoDataMapper;
+    @Autowired
+    AwsPreCheckDataMapper preCheckDataMapper;
+
 //    @PostConstruct
 //    public void init(){
 //        startCore.scanMapper=this.scanMapper;
@@ -49,6 +64,62 @@ public class StartCore implements CommandLineRunner {
 
     }
 
+//    public void process_preCheckData() {
+//        int timeThreshold = 2; //时间有效阈值为2秒
+//        while (true) {
+//            //读取摄像头的表,查询最新的一条数据
+//            AwsTempCarnoData tempCarnoData = tempCarnoDataMapper.selectOne(new QueryWrapper<AwsTempCarnoData>().lambda().orderByDesc(AwsTempCarnoData::getPassTime).last("limit 1"));
+//
+//            //如果不为空
+//            if(tempCarnoData!=null &&  tempCarnoData.getLane()!=null)
+//            {
+//                //搜索该车道里 符合最新的数据
+//                AwsTempWeightData tempWeightData=tempWeightDataMapper.selectOne(new QueryWrapper<AwsTempWeightData>().lambda().eq(AwsTempWeightData::getLane,tempCarnoData.getLane()).orderByDesc(AwsTempWeightData::getPassTime).last("limit 1"));
+//
+//                //计算时间差
+//                Date w_passtime=tempWeightData.getPassTime();
+//                Date c_passTime=tempCarnoData.getPassTime();
+//                long interval = (c_passTime.getTime() -  w_passtime.getTime())/1000;
+//
+//
+//                if(interval>0)
+//                {
+//                    if(interval<=timeThreshold)
+//                    {
+//
+//                        //插入到precheckdata
+//                        AwsPreCheckData pcData=new AwsPreCheckData();
+//                        pcData.setCreateTime(tempWeightData.getCreateTime());
+//                        pcData.setPassTime(tempWeightData.getPassTime());
+//                        pcData.setSpeed(tempWeightData.getSpeed());
+//                        pcData.setAxisNum(tempWeightData.getAxisNum());
+//                        pcData.setPreNo(tempWeightData.getPreNo());
+//                        pcData.setLane(tempWeightData.getLane());
+//                        pcData.setOrgCode(tempWeightData.getOrgCode());
+//                        pcData.setCarTypeId(tempWeightData.getCarTypeId());
+//                        pcData.setLimitAmt(tempWeightData.getLimitAmt());
+//                        pcData.setPreAmt(tempWeightData.getPreAmt());
+//                        pcData.setCarNo(tempCarnoData.getCarNo());
+//                        pcData.setImg(tempCarnoData.getImg());
+//
+//                        preCheckDataMapper.insert(pcData);
+//
+//                        //删除两个表的数据
+//                        tempWeightDataMapper.delete(new QueryWrapper<AwsTempWeightData>().lambda().eq(AwsTempWeightData::getId,tempWeightData.getId()));
+//
+//                        tempCarnoDataMapper.delete(new QueryWrapper<AwsTempCarnoData>().lambda().eq(AwsTempCarnoData::getId,tempCarnoData.getId()));
+//
+//                    }//如果符合阈值则插入percheck，并删除两个表中的这条数据，否则摄像头数据删除，秤台数据保留
+//                    else{
+//
+//                    }
+//                }//如果小于0可能获取到的秤台数据应该与之后摄像头的数据匹配，而不是此条数据
+//            }
+//
+//
+//        }
+//
+//    }
 
     @Async
     public void carWeighStart() {
@@ -65,9 +136,11 @@ public class StartCore implements CommandLineRunner {
             AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getReCode()));
 
             CarWeightCore cRead = new CarWeightCore(scan.getPortName(), 115200, awsScan.getCode(), awsScan.getFactory());
-            cRead.startMain();//异步线程处理数据
+            Thread thread=new Thread(cRead);
+            thread.start();
+           // cRead.startMain();//异步线程处理数据
             try {
-                Thread.sleep(1000);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -129,16 +202,28 @@ public class StartCore implements CommandLineRunner {
        List<AwsScan> list = scanMapper.selectList(qw);
          //startListen("10.16.36.108",(short)7200);//报警监听，不需要登陆设备
         //TODO 将list设备加载进hikMaps中
+
+//        int index=0;
         for (AwsScan scan : list) {
             String ip = scan.getVideoIp();
             int port = scan.getPort();
             String user_name = scan.getUserName();
             String password = scan.getPassword();
            // 10.19测试  HikCarNoCore hik = new HikCarNoCore("192.10.12.245", (short)8000);
+//            HikCarNoCore hik = new HikCarNoCore(ip, (short)port,user_name, password);
+//            Thread thread=new Thread(hik);
+//            thread.start();
+
             HikCarNoCore hik = new HikCarNoCore(ip, (short)port,user_name, password);
-            hik.processing_Data();
+            Thread thread=new Thread(hik);
+            thread.start();
+
+
+
+            // hik.processing_Data();
+            System.err.println("加载设备"+scan.getCode());
             try {
-                Thread.sleep(1000);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -148,7 +233,7 @@ public class StartCore implements CommandLineRunner {
     }
     @Override
     public void run(String... args) throws Exception {
-//        UnvCarNoStart();
+        //UnvCarNoStart();
 //        Thread myThread = new Thread(new Runnable(){
 //            @Override
 //            public void run() {
@@ -162,8 +247,12 @@ public class StartCore implements CommandLineRunner {
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
-//        HikCarNoStart();
+//        process_preCheckData();
+        HikCarNoStart();
         carWeighStart();
+
+
+
 
         //new ScoketWeightCore("192.10.12.243", 3132);
 //        LedCore led=new LedCore();

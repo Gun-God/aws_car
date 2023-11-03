@@ -1,6 +1,7 @@
 package com.aws.carno.Utils;
 
-import com.sun.istack.internal.NotNull;
+
+
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -83,8 +84,7 @@ public class StringUtil {
     }
 
 
-    public static @NotNull
-    String randomNumeric(int len) {
+    public static String randomNumeric(int len) {
         double v = Math.random() * 9 + 1;
         double pow = Math.pow(10, len - 1);
         int rs = (int) (v * pow);

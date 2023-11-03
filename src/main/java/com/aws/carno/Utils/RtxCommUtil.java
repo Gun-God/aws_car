@@ -35,7 +35,7 @@ public class RtxCommUtil implements SerialPortEventListener {
     public BlockingQueue<byte[]> msgQueue = new LinkedBlockingQueue<>();
     String code;
     int factory;
-    ArrayList<Byte> data_list = new ArrayList<Byte>();
+    LinkedList<Byte> data_list = new LinkedList<Byte>();
     int maxsize=0;
     int length=0;
 
@@ -146,23 +146,18 @@ public class RtxCommUtil implements SerialPortEventListener {
                         String preNo = StringUtil.genNo();
                         //将称台返回数据临时存储
                         StartCore.hashMap.put(Arrays.hashCode(new_buffers),preNo);
-//                                if (factory == 1) {
-//                                    UnvCarNoCore unv = StartCore.UnvMaps.get(code);
-//                                    //接收到称台数据 调用宇视摄像头异步抓拍;
-//                                    unv.CaptureSyncAction(preNo);
-//                                } else if (factory == 2) {
-//                                    HikCarNoCore hik = StartCore.HikMaps.get(code);
-//                                    //接收到称台数据 调用海康摄像头异步抓拍;
-//                                   // hik.startListen(preNo);
-//                                }
                         msgQueue.add(new_buffers);
+                        System.err.println("放入队列成功");
+                        for(int k=0;k<maxsize;k++)
+                        {
+                            System.err.print(new_buffers[k]);
+                        }
+                        System.err.println();
                     }
                     data_list.clear();
                     length=0;
                     maxsize=0;
-
                 }
-
             }
         }
 
