@@ -136,15 +136,16 @@ public class RTXDataParse {
 
     public static int getLane(byte b) {
         int by = oneBcdToDecimalInteger(b);
-        int lane=1;
-        if(by<10)
-        {
-            lane=1;
-        }
-        else{
-            lane=by/10;
-            lane=lane+1;
-        }
+        return ((by / 10) % 10)+1;
+
+//        if(by<10)
+//        {
+//            lane=1;
+//        }
+//        else{
+//            lane=by/10;
+//            lane=lane+1;
+//        }
 //
 //        switch (by) {
 //            case 11:
@@ -172,7 +173,7 @@ public class RTXDataParse {
 //                break;
 //        }
 
-        return lane;
+
 
     }
 
@@ -213,8 +214,10 @@ public class RTXDataParse {
         int axis = byteArray[17] / 10;
         pre.setAxisNum(axis);
         //获取车型
-        int carType = byteArray[17] % 10;
+//        int carType = byteArray[17] % 10;
+        int carType = byteArray[17];
         pre.setCarTypeId(carType);
+
         //获取总重量
         int l = 18;
         int total = 0;
@@ -234,60 +237,63 @@ public class RTXDataParse {
     }
 
     public static void main(String[] args) throws ParseException {
-        byte[] byteArray = hexStrToByteArray("ff 55 01 00 41 41 e3 46 01 00 00 23 10 19 17 28 38 16 00 02 90 00 04 30 00 02 90 00 04 30 00 28 34 16 31 32 43 31 32 33 33 44 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 af 49 64 00 04 34 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ");
-        int len = byteArray[4];
+//        byte[] byteArray = hexStrToByteArray("ff 55 01 00 41 41 e3 46 01 00 00 23 10 19 17 28 38 16 00 02 90 00 04 30 00 02 90 00 04 30 00 28 34 16 31 32 43 31 32 33 33 44 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 af 49 64 00 04 34 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ");
+//        int len = byteArray[4];
+//
+////         System.err.println(oneBcdToDecimalInteger(byteArray[1]));
+//        //  System.err.println((byteArray[1] & 0XF0)>> 4+(byteArray[1] & 0XF0));
+//        System.err.println("车道：" + getLane((byteArray[1])));
+//
+//        //System.err.println(byteArray[4]);
+//        System.err.println("帧长：" + len);
+//
+//        int speed = byteArray[5];
+//        System.err.println("车速：" + speed);
+//        int year = oneBcdToDecimalInteger(byteArray[11]);
+//        int month = oneBcdToDecimalInteger(byteArray[12]);
+//        int day = oneBcdToDecimalInteger(byteArray[13]);
+//        int hour = oneBcdToDecimalInteger(byteArray[14]);
+//        int min = oneBcdToDecimalInteger(byteArray[15]);
+//        int sec = oneBcdToDecimalInteger(byteArray[15]);
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
+//        Date date = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
+//        System.err.println(date);
+//        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        System.err.println(df.format(date));
+////        System.err.println(year+"年");
+////        System.err.println(month+"月");
+////        System.err.println(day+"日");
+////        System.err.println(hour+"小时");
+////        System.err.println(min+"分钟");
+////        System.err.println(sec+"秒");
+//
+//        // System.err.println("轴数：" + axis);
+//
+//        int axis = byteArray[17] / 10;
+//        System.err.println("轴数：" + axis);
+//        int carType = byteArray[17] % 10;
+//        System.err.println("车型：" + carType);
+//        int l = 18;
+//        int left = 1;
+//        int right = 1;
+//        int total = 0;
+//        for (int i = 1; i <= axis * 2; i++) {
+//            byte[] bytes = Arrays.copyOfRange(byteArray, l, l + 3);
+//            int aa = bcdToDecimalInteger(bytes);
+//            total += aa;
+//            if (i <= axis) {
+//                System.err.println("轴" + left + "左轮" + aa + "kg");
+//                left++;
+//            } else {
+//                System.err.println("轴" + right + "右轮" + aa + "kg");
+//                right++;
+//            }
+//            l += 3;
+//        }
+//        System.err.println("总重：" + total + "kg");
 
-//         System.err.println(oneBcdToDecimalInteger(byteArray[1]));
-        //  System.err.println((byteArray[1] & 0XF0)>> 4+(byteArray[1] & 0XF0));
-        System.err.println("车道：" + getLane((byteArray[1])));
-
-        //System.err.println(byteArray[4]);
-        System.err.println("帧长：" + len);
-
-        int speed = byteArray[5];
-        System.err.println("车速：" + speed);
-        int year = oneBcdToDecimalInteger(byteArray[11]);
-        int month = oneBcdToDecimalInteger(byteArray[12]);
-        int day = oneBcdToDecimalInteger(byteArray[13]);
-        int hour = oneBcdToDecimalInteger(byteArray[14]);
-        int min = oneBcdToDecimalInteger(byteArray[15]);
-        int sec = oneBcdToDecimalInteger(byteArray[15]);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
-        Date date = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
-        System.err.println(date);
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        System.err.println(df.format(date));
-//        System.err.println(year+"年");
-//        System.err.println(month+"月");
-//        System.err.println(day+"日");
-//        System.err.println(hour+"小时");
-//        System.err.println(min+"分钟");
-//        System.err.println(sec+"秒");
-
-        // System.err.println("轴数：" + axis);
-
-        int axis = byteArray[17] / 10;
-        System.err.println("轴数：" + axis);
-        int carType = byteArray[17] % 10;
-        System.err.println("车型：" + carType);
-        int l = 18;
-        int left = 1;
-        int right = 1;
-        int total = 0;
-        for (int i = 1; i <= axis * 2; i++) {
-            byte[] bytes = Arrays.copyOfRange(byteArray, l, l + 3);
-            int aa = bcdToDecimalInteger(bytes);
-            total += aa;
-            if (i <= axis) {
-                System.err.println("轴" + left + "左轮" + aa + "kg");
-                left++;
-            } else {
-                System.err.println("轴" + right + "右轮" + aa + "kg");
-                right++;
-            }
-            l += 3;
-        }
-        System.err.println("总重：" + total + "kg");
+        int a=5;
+        System.err.println(((a/10)%10)+1);
 //        byte[] bytes = Arrays.copyOfRange(byteArray, 18, 21);
 //        byte[] bytes1 = Arrays.copyOfRange(byteArray, 21, 24);
 //        String aa = bcdToDecimalString(bytes);

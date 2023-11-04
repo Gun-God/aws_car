@@ -18,6 +18,9 @@ import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import gnu.io.UnsupportedCommOperationException;
+import org.apache.commons.lang3.ArrayUtils;
+
+import static org.apache.ibatis.ognl.DynamicSubscript.first;
 
 /**
  * @author :hyw
@@ -33,6 +36,7 @@ public class RtxCommUtil implements SerialPortEventListener {
     CommPortIdentifier portId;
     public int type;
     public BlockingQueue<byte[]> msgQueue = new LinkedBlockingQueue<>();
+    public byte[] newBufffer = new byte[1024];
     String code;
     int factory;
     LinkedList<Byte> data_list = new LinkedList<Byte>();
@@ -75,6 +79,34 @@ public class RtxCommUtil implements SerialPortEventListener {
         } catch (UnsupportedCommOperationException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public void process_writeBuffer(byte[] buffer){
+        if (buffer[0]==-1){
+            if (buffer[2]==1){
+                msgQueue.add(buffer);
+                //生成唯一流水号
+                String preNo = StringUtil.genNo();
+                //将称台返回数据临时存储
+                StartCore.hashMap.put(Arrays.hashCode(buffer),preNo);
+            }
+            else
+                newBufffer=buffer;
+        }else {
+            if (newBufffer!=null){
+                byte[] nb= ArrayUtils.addAll(newBufffer,buffer);
+                //生成唯一流水号
+                String preNo = StringUtil.genNo();
+                //将称台返回数据临时存储
+                StartCore.hashMap.put(Arrays.hashCode(nb),preNo);
+                msgQueue.add(nb);
+                newBufffer=null;
+            }
+
+        }
+
+
     }
 
     //
@@ -190,7 +222,8 @@ public class RtxCommUtil implements SerialPortEventListener {
 
                         if (numBytes > 0) {
                             if (type == 1){
-                                process_readBuffer(readBuffer, numBytes);
+                                process_writeBuffer(readBuffer);
+                               // process_readBuffer(readBuffer, numBytes);
 
                                 //生成唯一流水号
                                 //String preNo = StringUtil.genNo();
@@ -236,6 +269,17 @@ public class RtxCommUtil implements SerialPortEventListener {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+
+    public static void main(String[] args) {
+        int[] a={1,2,3,4,5,6,7,8,9,10};
+        int[] b={20,12};
+        int[] c=ArrayUtils.addAll(a,b);
+        for (int d:c) {
+            System.err.println(d);
+
         }
     }
 }

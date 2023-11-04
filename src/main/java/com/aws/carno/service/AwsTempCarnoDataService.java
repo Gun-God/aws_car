@@ -5,4 +5,6 @@ import com.aws.carno.domain.AwsTempCarnoData;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface AwsTempCarnoDataService extends IService<AwsTempCarnoData> {
+
+    void processWeightAndCarno();
 }

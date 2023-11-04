@@ -133,9 +133,9 @@ public class StartCore implements CommandLineRunner {
         for (AwsScan scan : list) {
             //AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getCode()));
 
-            AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getReCode()));
+           /// AwsScan awsScan=scanMapper.selectOne(new QueryWrapper<AwsScan>().eq("code",scan.getReCode()));
 
-            CarWeightCore cRead = new CarWeightCore(scan.getPortName(), 115200, awsScan.getCode(), awsScan.getFactory());
+            CarWeightCore cRead = new CarWeightCore(scan.getPortName(), 115200, null, 0);
             Thread thread=new Thread(cRead);
             thread.start();
            // cRead.startMain();//异步线程处理数据
@@ -249,7 +249,7 @@ public class StartCore implements CommandLineRunner {
 //        }
 //        process_preCheckData();
         HikCarNoStart();
-        carWeighStart();
+       carWeighStart();
 
 
 

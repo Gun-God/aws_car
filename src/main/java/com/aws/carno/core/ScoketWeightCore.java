@@ -53,7 +53,7 @@ public class ScoketWeightCore {
             int len = inputStream.read(bytes);
             int length = inputStream.read(bytes); // 读取数据
             String message = new String(bytes, 0, length);
-            System.out.println("Received message: " + message);
+           // System.out.println("Received message: " + message);
             //将称台字节数据解析到实体类
             AwsPreCheckData preCheckData = RTXDataParse.byteArrayToObjData(bytes);
             //TODO 打印实体类数据(称重信息,重点看流水号是否绑定成功)

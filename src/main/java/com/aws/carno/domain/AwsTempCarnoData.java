@@ -29,6 +29,7 @@ public class AwsTempCarnoData implements Serializable {
      */
     private Integer lane;
 
+
     /**
      * 设备唯一标识
      */
