@@ -249,7 +249,11 @@ public class StartCore implements CommandLineRunner {
 //        }
 //        process_preCheckData();
         HikCarNoStart();
+<<<<<<< HEAD
        carWeighStart();
+=======
+       // carWeighStart();
+>>>>>>> 73a153a243da1c6d3e466a8f8c75702663354f7f
 
 
 

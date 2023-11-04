@@ -103,8 +103,11 @@ public class CarWeightCore implements Runnable {
                             hex1.append(" ");
                         }
                     }
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 73a153a243da1c6d3e466a8f8c75702663354f7f
                   //  System.out.println(hex1);
 
 //                    BufferedWriter writer = new BufferedWriter(new FileWriter("E:/com_data/output.txt", true));
@@ -115,21 +118,29 @@ public class CarWeightCore implements Runnable {
 //                    writer.close();
 
                     // System.err.println(new String(bytes, Charset.defaultCharset()));
+<<<<<<< HEAD
                     //String hex_weit_data=String.valueOf(hex1);
 
                     byte[] bytes1 = hexStrToByteArray(hex1.toString());
 
+=======
+                    byte[] bytes1 = hexStrToByteArray(hex1.toString());
+
+>>>>>>> 73a153a243da1c6d3e466a8f8c75702663354f7f
                     int hashCode = Arrays.hashCode(bytes);
                     //将称台字节数据解析到实体类
                     AwsPreCheckData preCheckData = RTXDataParse.byteArrayToObjData(bytes1);
                     AwsTempWeightData tempWeightData=new AwsTempWeightData();
                     BeanUtils.copyProperties(preCheckData, tempWeightData);
 
+<<<<<<< HEAD
                     ;
 
                     //test
                    // tempWeightData.setDeviceId(hex_weit_data);
 
+=======
+>>>>>>> 73a153a243da1c6d3e466a8f8c75702663354f7f
                     Date time = preCheckData.getPassTime();
                     System.out.println("时间差" + DateUtil.getBetweenDays(time, new Date()));
                     if (DateUtil.getBetweenDays( new Date(),time) > 0|| preCheckData.getWeight()==0)

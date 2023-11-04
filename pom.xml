@@ -46,11 +46,19 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+<<<<<<< HEAD
         <!--        <dependency>-->
         <!--            <groupId>net.java.dev.jna</groupId>-->
         <!--            <artifactId>jna</artifactId>-->
         <!--            <version>4.5.0</version>-->
         <!--        </dependency>-->
+=======
+<!--        <dependency>-->
+<!--            <groupId>net.java.dev.jna</groupId>-->
+<!--            <artifactId>jna</artifactId>-->
+<!--            <version>4.5.0</version>-->
+<!--        </dependency>-->
+>>>>>>> 73a153a243da1c6d3e466a8f8c75702663354f7f
 
 
         <dependency>
