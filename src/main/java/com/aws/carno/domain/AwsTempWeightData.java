@@ -9,18 +9,10 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- * <p>
- * 预检信息记录表
- * </p>
- *
- * @author HuangYW
- * @since 2023-05-15
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class AwsPreCheckData implements Serializable {
+public class AwsTempWeightData implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @TableId(value = "id",type = IdType.AUTO)
@@ -32,9 +24,10 @@ public class AwsPreCheckData implements Serializable {
     private String preNo;
 
     /**
-     * 车牌
+     * 设备唯一标识
      */
-    private String carNo;
+    private String deviceId;
+
 
     /**
      * 车自重
@@ -61,10 +54,7 @@ public class AwsPreCheckData implements Serializable {
      */
     private Integer lane;
 
-    /**
-     * 设备唯一标识
-     */
-    private String deviceId;
+
 
     /**
      * 拍照时间
@@ -75,15 +65,6 @@ public class AwsPreCheckData implements Serializable {
      * 通过时间
      */
     private Date passTime;
-
-    private String img;
-
-    private String url;
-
-    /**
-     * 是否展示（0不展示1展示）
-     */
-    private Integer isShow;
 
     /**
      * 预检重量
@@ -99,32 +80,23 @@ public class AwsPreCheckData implements Serializable {
      * 车型
      */
     private Integer carTypeId;
-    /**
-     * 车牌颜色（1蓝色2黄色）
-     */
-    private Integer color;
 
     @Override
     public String toString() {
-        return "AwsPreCheckData{" +
+        return "AwsTempWeightData{" +
                 "id=" + id +
                 ", preNo='" + preNo + '\'' +
-                ", carNo='" + carNo + '\'' +
+                ", deviceId='" + deviceId + '\'' +
                 ", weight=" + weight +
                 ", limitAmt=" + limitAmt +
                 ", axisNum=" + axisNum +
                 ", speed=" + speed +
                 ", lane=" + lane +
-                ", deviceId='" + deviceId + '\'' +
                 ", createTime=" + createTime +
                 ", passTime=" + passTime +
-                ", img='" + img + '\'' +
-                ", url='" + url + '\'' +
-                ", isShow=" + isShow +
                 ", preAmt=" + preAmt +
                 ", orgCode='" + orgCode + '\'' +
                 ", carTypeId=" + carTypeId +
-                ", color=" + color +
                 '}';
     }
 }

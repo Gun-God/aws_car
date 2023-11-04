@@ -11,7 +11,7 @@ import java.util.Date;
 
 /**
  * <p>
- * 预检信息记录表
+ * 预检信息记录历史表
  * </p>
  *
  * @author HuangYW
@@ -20,7 +20,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class AwsPreCheckData implements Serializable {
+public class AwsPreCheckDataHistory implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @TableId(value = "id",type = IdType.AUTO)
@@ -99,32 +99,11 @@ public class AwsPreCheckData implements Serializable {
      * 车型
      */
     private Integer carTypeId;
+
     /**
      * 车牌颜色（1蓝色2黄色）
      */
     private Integer color;
 
-    @Override
-    public String toString() {
-        return "AwsPreCheckData{" +
-                "id=" + id +
-                ", preNo='" + preNo + '\'' +
-                ", carNo='" + carNo + '\'' +
-                ", weight=" + weight +
-                ", limitAmt=" + limitAmt +
-                ", axisNum=" + axisNum +
-                ", speed=" + speed +
-                ", lane=" + lane +
-                ", deviceId='" + deviceId + '\'' +
-                ", createTime=" + createTime +
-                ", passTime=" + passTime +
-                ", img='" + img + '\'' +
-                ", url='" + url + '\'' +
-                ", isShow=" + isShow +
-                ", preAmt=" + preAmt +
-                ", orgCode='" + orgCode + '\'' +
-                ", carTypeId=" + carTypeId +
-                ", color=" + color +
-                '}';
-    }
+
 }

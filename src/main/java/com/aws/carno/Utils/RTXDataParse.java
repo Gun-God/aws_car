@@ -26,14 +26,16 @@ public class RTXDataParse {
         if (str.length() == 0) {
             return new byte[0];
         }
-        byte[] byteArray = new byte[str.length() / 3];
+        int new_length;
+        int yushu=str.length()%3;
+        if(yushu!=0)
+            new_length=str.length()/3+1;
+        else
+            new_length=str.length()/3;
+
+        byte[] byteArray = new byte[new_length];
         for (int i = 0; i < byteArray.length; i++) {
-//            int l=0;
-//            if (i%2==0)
-//                l=2*i;
-//            else
-//                l=2*i+1;
-            String subStr = str.substring(3 * i, 3 * i + 2);
+            String subStr = str.substring(3 * i, 3 * i+2 );
             byteArray[i] = ((byte) Integer.parseInt(subStr, 16));
         }
         return byteArray;
@@ -134,32 +136,41 @@ public class RTXDataParse {
 
     public static int getLane(byte b) {
         int by = oneBcdToDecimalInteger(b);
-        int lane = 1;
-        switch (by) {
-            case 11:
-                lane = 2;
-                break;
-            case 22:
-                lane = 3;
-                break;
-            case 33:
-                lane = 4;
-                break;
-            case 44:
-                lane = 5;
-                break;
-            case 55:
-                lane = 6;
-                break;
-            case 66:
-                lane = 7;
-                break;
-            case 77:
-                lane = 8;
-                break;
-            default:
-                break;
+        int lane=1;
+        if(by<10)
+        {
+            lane=1;
         }
+        else{
+            lane=by/10;
+            lane=lane+1;
+        }
+//
+//        switch (by) {
+//            case 11:
+//                lane = 2;
+//                break;
+//            case 22:
+//                lane = 3;
+//                break;
+//            case 33:
+//                lane = 4;
+//                break;
+//            case 44:
+//                lane = 5;
+//                break;
+//            case 55:
+//                lane = 6;
+//                break;
+//            case 66:
+//                lane = 7;
+//                break;
+//            case 77:
+//                lane = 8;
+//                break;
+//            default:
+//                break;
+//        }
 
         return lane;
 
@@ -167,14 +178,16 @@ public class RTXDataParse {
 
     /**
      * 从byte字节中解析车辆数据信息
+     *
      * @param byteArray
      * @return
      */
     public static AwsPreCheckData byteArrayToObjData(byte[] byteArray) {
+
         AwsPreCheckData pre = new AwsPreCheckData();
         //获取车道数据
         int lane = getLane(byteArray[1]);
-        pre.setLane(lane);
+        pre.setLane(lane);//车道算法需要修改
         //获取车速
         int speed = byteArray[5];
         pre.setSpeed((double) speed);
@@ -184,7 +197,10 @@ public class RTXDataParse {
         int day = oneBcdToDecimalInteger(byteArray[13]);
         int hour = oneBcdToDecimalInteger(byteArray[14]);
         int min = oneBcdToDecimalInteger(byteArray[15]);
-        int sec = oneBcdToDecimalInteger(byteArray[15]);
+        int sec = oneBcdToDecimalInteger(byteArray[16]);
+
+//        for(int i=0;i<b;i++)
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
         Date date = null;
         try {
@@ -197,7 +213,7 @@ public class RTXDataParse {
         int axis = byteArray[17] / 10;
         pre.setAxisNum(axis);
         //获取车型
-        int carType = byteArray[17];
+        int carType = byteArray[17] % 10;
         pre.setCarTypeId(carType);
         //获取总重量
         int l = 18;
@@ -208,8 +224,9 @@ public class RTXDataParse {
             total += aa;
             l += 3;
         }
+        pre.setWeight((double)total);
 
-        BigDecimal b1 = BigDecimal.valueOf(((double) total / 1000) * 100);
+        BigDecimal b1 = BigDecimal.valueOf(((double) total / 1000));
         double preAmt = b1.setScale(2, RoundingMode.HALF_UP).doubleValue();
         pre.setPreAmt(preAmt);
         return pre;
@@ -217,7 +234,7 @@ public class RTXDataParse {
     }
 
     public static void main(String[] args) throws ParseException {
-        byte[] byteArray = hexStrToByteArray("FF 22 01 00 41 46 E8 03 00 00 00 16 08 24 18 18 19 18 00 05 00 00 04 00 00 05 00 00 04 00 00 27 00 0D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 65 85 ");
+        byte[] byteArray = hexStrToByteArray("ff 55 01 00 41 41 e3 46 01 00 00 23 10 19 17 28 38 16 00 02 90 00 04 30 00 02 90 00 04 30 00 28 34 16 31 32 43 31 32 33 33 44 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 af 49 64 00 04 34 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ");
         int len = byteArray[4];
 
 //         System.err.println(oneBcdToDecimalInteger(byteArray[1]));

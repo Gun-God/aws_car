@@ -51,10 +51,30 @@
 <!--            <artifactId>jna</artifactId>-->
 <!--            <version>4.5.0</version>-->
 <!--        </dependency>-->
+
+
+        <dependency>
+            <!--groupId 随便填写 -->
+            <groupId>com.sun</groupId>
+            <!--artifactId 随便填写-->
+            <artifactId>jna</artifactId>
+            <!--version 随便填写-->
+            <version>4.5.1</version>
+            <!-- scope=system表示此依赖是来自外部jar，而不是maven仓库。当scope设置为system时，systemPath属性才会生效，systemPath为一个物理文件路径，来指定依赖的jar其物理磁盘的位置。 -->
+            <scope>system</scope>
+            <!-- ${project.basedir}代表根目录 -->
+            <systemPath>${project.basedir}/libs/jna.jar</systemPath>
+        </dependency>
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.8.1</version>
         </dependency>
     </dependencies>
 
