@@ -97,9 +97,9 @@ public class RtxCommUtil implements SerialPortEventListener {
             if (newBufffer!=null){
                 byte[] nb= ArrayUtils.addAll(newBufffer,buffer);
                 //生成唯一流水号
-                String preNo = StringUtil.genNo();
+              //  String preNo = StringUtil.genNo();
                 //将称台返回数据临时存储
-                StartCore.hashMap.put(Arrays.hashCode(nb),preNo);
+               // StartCore.hashMap.put(Arrays.hashCode(nb),preNo);
                 msgQueue.add(nb);
                 newBufffer=null;
             }

@@ -149,8 +149,8 @@ public class CarWeightCore implements Runnable {
 //                    System.out.println("=========================================================");
 //                    System.out.println("称重台检测内容：");
 //                    System.err.println(preCheckData);
-                    String preNo = StartCore.hashMap.get(hashCode);
-
+                    //String preNo = StartCore.hashMap.get(hashCode);
+                    String preNo=StringUtil.genNo();
 //                    String filename = "F:"+ File.separator+"weight_data"+File.separator +preNo+".txt";
 //                    BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
 //                    writer.write(String.valueOf(hex1));
@@ -159,7 +159,6 @@ public class CarWeightCore implements Runnable {
 //                    // 在这里写入文件
 //                    writer.close();
                     //保存秤台数据临时解析用
-
 
 
                     AwsCarTypeIdRelation relation = carWeightCore.relationMapper.selectOne(new QueryWrapper<AwsCarTypeIdRelation>().lambda().eq(AwsCarTypeIdRelation::getVehType, preCheckData.getCarTypeId()));
