@@ -379,7 +379,7 @@ public class HikCarNoCore implements Runnable{
 
                     Date passTime = null;
                     String MonitoringSiteID;
-                    int laneInfo = 2;
+                    int laneInfo =2;
                     //获得数据
                     HCNetSDK.NET_ITS_PLATE_RESULT strItsPlateResult;
                     strItsPlateResult = msgQueue1.take();
