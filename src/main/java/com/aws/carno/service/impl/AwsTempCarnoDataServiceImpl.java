@@ -17,8 +17,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class AwsTempCarnoDataServiceImpl
@@ -37,50 +41,77 @@ public class AwsTempCarnoDataServiceImpl
     @Override
     public void processWeightAndCarno() {
         System.out.println("定时任务匹配");
-        List<AwsTempCarnoData> awsTempCarnoDataList = awsTempCarnoDataMapper.selectList(null);
+        List<AwsTempCarnoData> awsTempCarnoDataList = awsTempCarnoDataMapper.selectList(new QueryWrapper<AwsTempCarnoData>().lambda().orderByDesc(AwsTempCarnoData::getId));
+        ExecutorService pool= Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()*2);
+        final int[] count = {0};
         if (awsTempCarnoDataList.size() > 0) {
             for (AwsTempCarnoData awsTempCarnoData : awsTempCarnoDataList) {
-                // 处理重量
-                Integer lane=awsTempCarnoData.getLane();
-                Date passTime=awsTempCarnoData.getPassTime();
-                int timeThreshold = 60; //时间有效阈值为2秒
-                // AwsPreCheckData pCData = hikCarNoCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getLane, laneInfo).isNull(AwsPreCheckData::getCarNo).orderByDesc(AwsPreCheckData::getPassTime).last("limit 1"));
-                Date date1= DateUtil.reduceDateSecond(passTime,timeThreshold);
-                Date date2= DateUtil.addDateSecond(passTime,timeThreshold);
-                List<AwsTempWeightData> pCDataList = awsTempWeightDataMapper.selectList(new QueryWrapper< AwsTempWeightData>().lambda().eq( AwsTempWeightData::getLane, lane).between( AwsTempWeightData::getPassTime, date1,date2));
-                AwsTempWeightData pCData = new AwsTempWeightData();
-                if (pCDataList.size() > 0){
-                    long diff=-1;
-                    for (AwsTempWeightData data:pCDataList) {
-                        long d=Math.abs(data.getPassTime().getTime()-passTime.getTime());
-                        if(diff==-1||d<diff){
-                            diff=d;
-                            BeanUtils.copyProperties(data, pCData);
+                pool.execute(() -> {
+                    // 处理重量
+                    Integer lane=awsTempCarnoData.getLane();
+                    Date passTime=awsTempCarnoData.getPassTime();
+                    int timeThreshold = 60; //时间有效阈值
+                    // AwsPreCheckData pCData = hikCarNoCore.preCheckDataMapper.selectOne(new QueryWrapper<AwsPreCheckData>().lambda().eq(AwsPreCheckData::getLane, laneInfo).isNull(AwsPreCheckData::getCarNo).orderByDesc(AwsPreCheckData::getPassTime).last("limit 1"));
+                    Date date1= DateUtil.reduceDateSecond(passTime,timeThreshold);
+                    Date date2= DateUtil.addDateSecond(passTime,timeThreshold);
+                    List<AwsTempWeightData> pCDataList = awsTempWeightDataMapper.selectList(new QueryWrapper< AwsTempWeightData>().lambda().eq( AwsTempWeightData::getLane, lane).between( AwsTempWeightData::getPassTime, date1,date2));
+                    AwsTempWeightData pCData = new AwsTempWeightData();
+                    if (pCDataList.size() > 0){
+                        long diff=-1;
+                        for (AwsTempWeightData data:pCDataList) {
+                            long d=Math.abs(data.getPassTime().getTime()-passTime.getTime());
+                            if(diff==-1||d<diff){
+                                diff=d;
+                                BeanUtils.copyProperties(data, pCData);
+                            }
+
+                        }
+                        count[0]++;
+                        System.out.println("匹配成功"+awsTempCarnoData.getCarNo());
+                        AwsPreCheckData preCheckData = new AwsPreCheckData();
+                        BeanUtils.copyProperties(pCData, preCheckData);
+                        preCheckData.setCarNo(awsTempCarnoData.getCarNo());
+                        preCheckData.setImg(awsTempCarnoData.getImg());
+                        preCheckData.setColor(awsTempCarnoData.getColor());
+                        AwsPreCheckDataHistory preCheckDataHistory = new AwsPreCheckDataHistory();
+                        BeanUtils.copyProperties(preCheckData, preCheckDataHistory);
+                        if(preCheckDataMapper.insert(preCheckData)==1&&historyMapper.insert(preCheckDataHistory)==1){
+                            awsTempCarnoDataMapper.deleteById(awsTempCarnoData.getId());
+                            awsTempWeightDataMapper.deleteById(pCData.getId());
                         }
 
                     }
-
-                    System.out.println("匹配成功"+awsTempCarnoData.getCarNo());
-                    AwsPreCheckData preCheckData = new AwsPreCheckData();
-                    BeanUtils.copyProperties(pCData, preCheckData);
-                    preCheckData.setCarNo(awsTempCarnoData.getCarNo());
-                    preCheckData.setImg(awsTempCarnoData.getImg());
-                    preCheckData.setColor(awsTempCarnoData.getColor());
-                    AwsPreCheckDataHistory preCheckDataHistory = new AwsPreCheckDataHistory();
-                    BeanUtils.copyProperties(preCheckData, preCheckDataHistory);
-                    if(preCheckDataMapper.insert(preCheckData)==1&&historyMapper.insert(preCheckDataHistory)==1){
-                        awsTempCarnoDataMapper.deleteById(awsTempCarnoData.getId());
-                        awsTempWeightDataMapper.deleteById(pCData.getId());
-
-                    }
-
-
-
+                });
+            }
+            pool.shutdown();
+            while (true){
+                if(pool.isTerminated()){
+                    pool.shutdownNow();
+                    System.out.println("匹配完成,匹配条数："+count[0]);
+                    break;
                 }
-
-
             }
 
         }
+    }
+    @Override
+    public void deleteOverData(){
+        AwsTempCarnoData atcd= awsTempCarnoDataMapper.selectOne(new QueryWrapper<AwsTempCarnoData>().lambda().orderByDesc(AwsTempCarnoData::getId));
+        Date newTime=atcd.getPassTime();
+        String beforeTime=DateUtil.reduceDateMinut(newTime,30);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            Date bTime=format.parse(beforeTime);
+            awsTempCarnoDataMapper.delete(new QueryWrapper<AwsTempCarnoData>().lambda().lt(AwsTempCarnoData::getPassTime,bTime));
+            awsTempWeightDataMapper.delete(new QueryWrapper<AwsTempWeightData>().lambda().lt(AwsTempWeightData::getPassTime,bTime));
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
+
+
+
     }
 }

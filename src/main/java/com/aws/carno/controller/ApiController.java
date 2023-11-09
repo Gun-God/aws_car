@@ -21,4 +21,12 @@ public class ApiController {
     public void PreCheckDataScheduledInto(){
         awsTempCarnoDataService.processWeightAndCarno();
     }
+
+
+    @Scheduled(cron ="0 1 0 * * ? ")
+    public void DeleteOverDataScheduledInto(){
+        awsTempCarnoDataService.deleteOverData();
+    }
+
+
 }

@@ -151,7 +151,7 @@ public class UnvCarNoCore {
     }
 
 
-    //实况抓拍
+    //实况抓拍   实时抓拍
     public void btnPicPlayActionPerformed(String no) {//GEN-FIRST:event_btnPicPlayActionPerformed
         preNo=no;
         if (Pointer.NULL == m_lpDevHandle) {

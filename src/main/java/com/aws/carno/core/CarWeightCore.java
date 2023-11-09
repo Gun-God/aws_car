@@ -105,7 +105,7 @@ public class CarWeightCore implements Runnable {
                     }
 
 
-                  //  System.out.println(hex1);
+                    //  System.out.println(hex1);
 
 //                    BufferedWriter writer = new BufferedWriter(new FileWriter("E:/com_data/output.txt", true));
 //                    writer.write(String.valueOf(hex1));
@@ -128,14 +128,16 @@ public class CarWeightCore implements Runnable {
                     ;
 
                     //test
-                   // tempWeightData.setDeviceId(hex_weit_data);
+                    // tempWeightData.setDeviceId(hex_weit_data);
+                    //test
+                    // tempWeightData.setDeviceId(String.valueOf(hex1));
 
                     Date time = preCheckData.getPassTime();
                     System.out.println("时间差" + DateUtil.getBetweenDays(time, new Date()));
                     if (DateUtil.getBetweenDays( new Date(),time) > 0|| preCheckData.getWeight()==0)
                         continue;
 
-                   // AwsPreCheckDataHistory preHis = new AwsPreCheckDataHistory();
+                    // AwsPreCheckDataHistory preHis = new AwsPreCheckDataHistory();
 //                    System.out.println("预见复制1" + preCheckData.getPassTime());
 //                    BeanUtils.copyProperties(preCheckData, preHis);
 //                    System.out.println("预见复制2" + preHis.getPassTime());
@@ -150,15 +152,16 @@ public class CarWeightCore implements Runnable {
 //                    System.out.println("称重台检测内容：");
 //                    System.err.println(preCheckData);
                     //String preNo = StartCore.hashMap.get(hashCode);
-                    String preNo=StringUtil.genNo();
-//                    String filename = "F:"+ File.separator+"weight_data"+File.separator +preNo+".txt";
-//                    BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
-//                    writer.write(String.valueOf(hex1));
-//
-//                    writer.newLine(); // 写入换行
-//                    // 在这里写入文件
-//                    writer.close();
-                    //保存秤台数据临时解析用
+                    String preNo = StringUtil.genNo();
+                    String filename = "F:"+ File.separator+"weight_data"+File.separator +preNo+".txt";
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
+                    writer.write(String.valueOf(hex1));
+
+                    writer.newLine(); // 写入换行
+                    // 在这里写入文件
+                    writer.close();
+//                    保存秤台数据临时解析用
+
 
 
                     AwsCarTypeIdRelation relation = carWeightCore.relationMapper.selectOne(new QueryWrapper<AwsCarTypeIdRelation>().lambda().eq(AwsCarTypeIdRelation::getVehType, preCheckData.getCarTypeId()));
@@ -170,10 +173,10 @@ public class CarWeightCore implements Runnable {
                     AwsCarType carType = carWeightCore.carTypeMapper.selectById(carTypeId);
                     if (carType != null) {
                         tempWeightData.setLimitAmt(carType.getLimitAmt());
-                       // preHis.setLimitAmt(carType.getLimitAmt());
+                        // preHis.setLimitAmt(carType.getLimitAmt());
                     } else {
                         tempWeightData.setLimitAmt(0d);
-                     //   preHis.setLimitAmt(0d);
+                        //   preHis.setLimitAmt(0d);
                     }
 
 //                    preCheckData.setCreateTime(new Date());
@@ -188,7 +191,7 @@ public class CarWeightCore implements Runnable {
                     //TODO 如果是空的，则插入称重,最大限重，车辆类型等内容插入数据库
 //                    if(preCheckData.getWeight()!=0 && preCheckData.getWeight() <10000)
                     carWeightCore.tempWeightDataMapper.insert(tempWeightData);
-                   // carWeightCore.preCheckDataHistoryMapper.insert(preHis);
+                    // carWeightCore.preCheckDataHistoryMapper.insert(preHis);
 
 //                    long inset_db_over=System.currentTimeMillis();
 //                    System.out.println("称台数据入库时间"+(inset_db_over)+"   "+(time_prase)+"  "+(inset_db_over-time_prase));
@@ -206,6 +209,8 @@ public class CarWeightCore implements Runnable {
             }
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

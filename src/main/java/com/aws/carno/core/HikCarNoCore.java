@@ -81,6 +81,88 @@ public class HikCarNoCore implements Runnable{
 
         processing_Data();
     }
+
+        //这个代码用于手动抓拍
+    public class CarFMSGCallBack implements HCNetSDK.FMSGCallBack {
+            public void invoke(int lCommand, HCNetSDK.NET_DVR_ALARMER pAlarmer, Pointer pAlarmInfo, int dwBufLen, Pointer pUser) {
+                System.out.println("报警事件类型： lCommand:" + Integer.toHexString(lCommand));
+                int laneInfo=-1;
+                //lCommand是传的报警类型
+                if (lCommand == HCNetSDK.COMM_ITS_PLATE_RESULT) {//交通抓拍结果(新报警信息)
+                    HCNetSDK.NET_ITS_PLATE_RESULT strItsPlateResult = new HCNetSDK.NET_ITS_PLATE_RESULT();
+                    strItsPlateResult.write();
+//              获取车辆信息指针
+                    Pointer pItsPlateInfo = strItsPlateResult.getPointer();
+                    pItsPlateInfo.write(0, pAlarmInfo.getByteArray(0, strItsPlateResult.size()), 0, strItsPlateResult.size());
+                    strItsPlateResult.read();
+
+                    msgQueue1.add(strItsPlateResult);
+                    String no = null;
+                    try {
+                        no = new String(strItsPlateResult.struPlateInfo.sLicense, "GB2312");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    no=no.replaceAll("\\x00", "");
+                    if(!no.contains("无"))
+                        no=no.substring(1);
+                    HCNetSDK.NET_DVR_TIME_V30 snapTime = strItsPlateResult.struSnapFirstPicTime;
+                    int year = snapTime.wYear; //
+                    int month = snapTime.byMonth; // 注意：月份是从0开始的
+                    int day = snapTime.byDay;
+                    int hour = snapTime.byHour;
+                    int min = snapTime.byMinute;
+                    int sec = snapTime.bySecond;
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
+                    Date passTime = null;
+                    try {
+                        passTime = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    if (strItsPlateResult.struPicInfo[0].dwDataLen > 0) {
+                        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
+                        String newName = sf.format(passTime);
+                        FileOutputStream fout;
+                        try {
+                            String filename = "F:"+File.separator+"pic"+File.separator+no+File.separator + newName +".jpg";
+
+                            File file = new File(filename);
+                            if (!file.getParentFile().exists())
+                                file.getParentFile().mkdirs();
+                            if (!file.exists())
+                                file.createNewFile();
+                            file.setWritable(true);
+                            fout = new FileOutputStream(file);
+                            //将字节写入文件
+                            long offset = 0;
+                            ByteBuffer buffers = strItsPlateResult.struPicInfo[0].pBuffer.getByteBuffer(offset, strItsPlateResult.struPicInfo[0].dwDataLen);
+                            byte[] bytes = new byte[strItsPlateResult.struPicInfo[0].dwDataLen];
+                            buffers.rewind();
+                            buffers.get(bytes);
+                            fout.write(bytes);
+                            fout.close();
+                            System.err.println("写入图片完毕！");
+//                      数据库操作
+//                            if(i==1)//只保留车远景    也可以判断strItsPlateResult.struPicInfo[i].byType==1
+//                            {
+//                                file_url=filename;
+//                            }
+                        } catch (FileNotFoundException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+
+               // return true;
+            }
+    }
+
 //
 //    //这个代码用于手动抓拍
 //    public class CarFMSGCallBack implements HCNetSDK.FMSGCallBack {
@@ -330,11 +412,26 @@ public class HikCarNoCore implements Runnable{
                 System.out.println("设置回调函数V31成功!");
             }
         }
+
+       /* if (fMSFCallBack== null) {
+            fMSFCallBack = new CarFMSGCallBack();
+
+            if (fMSFCallBack==null) {
+                System.out.println("设置监听回调函数失败!");
+                return;
+            } else {
+                System.out.println("设置监听回调函数成功!");
+            }
+        }*/
+
        int lAlarmHandle=-1;
 // 10.19调试 login_V40("192.10.12.245", (short) 8000, "admin", "admin12345");
        int lUserId= login_V40(ip, port, user_name,password);
        if (lUserId!=-1)
-        setAlarm(lAlarmHandle,lUserId);
+       {
+           setAlarm(lAlarmHandle,lUserId);
+           //startListen(lUserId);
+       }
        else
            System.out.println("登录失败");
 
@@ -573,11 +670,11 @@ public class HikCarNoCore implements Runnable{
 //    /**
 //     * 开启监听
 //     */
-    public void startListen(String no) {
-        preNo = no;
-//        if (fMSFCallBack == null) {
-//            fMSFCallBack = new CarFMSGCallBack();
-//        }
+    public void startListen(int lUserID) {
+        //preNo = no;
+        if (fMSFCallBack == null) {
+            fMSFCallBack = new CarFMSGCallBack();
+        }
         lListenHandle = hCNetSDK.NET_DVR_StartListen_V30(ip, port, fMSFCallBack, null);
         if (lListenHandle == -1) {
             System.out.println("监听失败" + hCNetSDK.NET_DVR_GetLastError());

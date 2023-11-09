@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.aws</groupId>
     <artifactId>carNo</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>carNo</name>
     <description>carNo</description>
     <properties>

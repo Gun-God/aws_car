@@ -248,11 +248,8 @@ public class StartCore implements CommandLineRunner {
 //            e.printStackTrace();
 //        }
 //        process_preCheckData();
+        carWeighStart();
         HikCarNoStart();
-       carWeighStart();
-
-
-
 
         //new ScoketWeightCore("192.10.12.243", 3132);
 //        LedCore led=new LedCore();
