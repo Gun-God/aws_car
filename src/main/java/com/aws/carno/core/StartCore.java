@@ -57,6 +57,8 @@ public class StartCore implements CommandLineRunner {
 //    }
     public static Map<String, UnvCarNoCore> UnvMaps = new HashMap<>();
     public static Map<String, HikCarNoCore> HikMaps = new HashMap<>();
+    public static Map<String,AwsScan> HikScanMaps=new HashMap<>();
+    public static Map<String,AwsScan> weightScanMaps=new HashMap<>();
     public static ConcurrentHashMap<Integer,String> hashMap=new ConcurrentHashMap<>();
 
     public StartCore()
@@ -138,6 +140,7 @@ public class StartCore implements CommandLineRunner {
             CarWeightCore cRead = new CarWeightCore(scan.getPortName(), 115200, null, 0);
             Thread thread=new Thread(cRead);
             thread.start();
+            weightScanMaps.put(scan.getPortName(),scan);
            // cRead.startMain();//异步线程处理数据
             try {
                 Thread.sleep(200);
@@ -172,6 +175,7 @@ public class StartCore implements CommandLineRunner {
     }
 
 
+
     public void HikCarNoStart() {
         if (HikCarNoCore.hCNetSDK == null) {
             if (!HikCarNoCore.createSDKInstance()) {
@@ -194,19 +198,35 @@ public class StartCore implements CommandLineRunner {
         struNET_DVR_LOCAL_GENERAL_CFG.write();
         Pointer pStrNET_DVR_LOCAL_GENERAL_CFG = struNET_DVR_LOCAL_GENERAL_CFG.getPointer();
         HikCarNoCore.hCNetSDK.NET_DVR_SetSDKLocalCfg(17, pStrNET_DVR_LOCAL_GENERAL_CFG);
+
+
+
         QueryWrapper<AwsScan> qw = new QueryWrapper<>();
         qw.eq("state", 1);
         qw.eq("type", 3);
         qw.eq("factory", 2);
         //TODO 添加海康设备到list
-       List<AwsScan> list = scanMapper.selectList(qw);
-         //startListen("10.16.36.108",(short)7200);//报警监听，不需要登陆设备
+        List<AwsScan> list = scanMapper.selectList(qw);
+        //startListen("10.16.36.108",(short)7200);//报警监听，不需要登陆设备
         //TODO 将list设备加载进hikMaps中
-
-//        int index=0;
         for (AwsScan scan : list) {
             String ip = scan.getVideoIp();
-            int port = scan.getPort();
+            HikScanMaps.put(ip,scan);
+        }
+
+        HikCarNoCore hik = new HikCarNoCore("192.168.3.3", (short)7200,"admin", "admin12345");
+        //hik.setCameraTime();
+
+        Thread thread=new Thread(hik);
+        thread.start();
+
+//        int index=0;
+       /* for (AwsScan scan : list) {
+            String ip = scan.getVideoIp();
+            //int port = scan.getPort();
+            String vPort=scan.getVideoPort();
+            int listenPort=Integer.parseInt(vPort);
+
             String user_name = scan.getUserName();
             String password = scan.getPassword();
            // 10.19测试  HikCarNoCore hik = new HikCarNoCore("192.10.12.245", (short)8000);
@@ -214,7 +234,7 @@ public class StartCore implements CommandLineRunner {
 //            Thread thread=new Thread(hik);
 //            thread.start();
 
-            HikCarNoCore hik = new HikCarNoCore(ip, (short)port,user_name, password);
+            HikCarNoCore hik = new HikCarNoCore(ip, (short)listenPort,user_name, password);
             Thread thread=new Thread(hik);
             thread.start();
 
@@ -229,7 +249,7 @@ public class StartCore implements CommandLineRunner {
             }
             HikMaps.put(scan.getCode(), hik);
 
-             }
+             }*/
     }
     @Override
     public void run(String... args) throws Exception {
@@ -248,11 +268,14 @@ public class StartCore implements CommandLineRunner {
 //            e.printStackTrace();
 //        }
 //        process_preCheckData();
+
+
         carWeighStart();
         HikCarNoStart();
 
         //new ScoketWeightCore("192.10.12.243", 3132);
 //        LedCore led=new LedCore();
-//        led.startMain("COM3",9600,"请苏FE1861进站检测");
+////        led.startMain("COM1",9600,"请苏FE1861进站检测");
+//        led.startMain("COM7",115200,"请苏FE1861进站检测！");
     }
 }

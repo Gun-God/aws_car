@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Thread.sleep;
 
@@ -32,9 +34,9 @@ public class testObject {
         int new_length;
         int yushu=str.length()%3;
         if(yushu!=0)
-        new_length=str.length()/3+1;
+            new_length=str.length()/3+1;
         else
-        new_length=str.length()/3;
+            new_length=str.length()/3;
 
         byte[] byteArray = new byte[new_length];
         for (int i = 0; i < byteArray.length; i++) {
@@ -105,7 +107,7 @@ public class testObject {
                         maxsize=18+9*axis;
                     }
                 }
-                 if(length==maxsize)
+                if(length==maxsize)
                 {//最后一位
                     invalid_index=0;
                     byte[] new_buffers=new byte[maxsize];
@@ -142,56 +144,78 @@ public class testObject {
         System.err.println("time end:"+time_end);
     }
 
+    public static void zzIp(String ipLong)
+    {
+//        String regex="^(?:[0-9]\\.){3}[0-9]{1,3}$";
+        String regex="\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
+
+        Pattern pattern=Pattern.compile(regex);
+
+        Matcher matcher=pattern.matcher(ipLong);
+        String ipstr="";
+        if(matcher.find())
+        {
+            ipstr=matcher.group();
+        }
+        System.err.println(ipstr);
+    }
+
 
     public static void main(String[] args)
     {
-
-        byte[] b1=hexStrToByteArray("FF 22 01 00 65 37 AA 3F 07 00 00 23 10 26 CC 26 17 00");
-        byte[] b2=hexStrToByteArray("FF 22 01 00 65 37 AA 3F 07 00 00 23 10 26 11 30 01 3C 00 14 60 00 10 40 00 09 50 00 05 50 00 12 50 00 11 30 00 14 60 00 10 40 00 09 50 00 05 50 00 12 50 00 11 30 00 20 18 00 13 07 00 50 39 00 13 24 00 13 10 1C 32 32 FF 44 01 00 65 33 AB 3F 07 00 00 23 10 26 11 30 01 3C 00 33 50 00 05 20 00 06 10 00 06 80 00 06 80 00 08 40 00 33 50 00 05 20 00 06 10 00 06 80 00 06 80 00 08 40 00 20 26 00 13 09 00 50 35 00 13 24 00 13 12 1C 33 31 32 31 32 33 33 31 32 31 32 33 33 31 32 31 32 33 43 44 4B 50 30 30 59 0A 37 00 01 83 72");
-//        byte[] b3=hexStrToByteArray("50 00 11 30 00 20 18 00 13 07 00 50 39 00 13 24 00 13 10 1C CC");
-//        byte[] b4=hexStrToByteArray("32 32 01 FF 02 01 12 23 10 26 11 30 07 59 0C 00 00 00 79 79 00 CC");
-//        byte[] b=hexStrToByteArray("FF 04 02 00 12 23 10 26 11 30 08 59 0D 00 01 00 98 90");
-        Thread myThread = new Thread(new Runnable(){
-            @Override
-            public void run() {
-                // 在 run() 方法中编写线程要执行的任务。
-
-                for (int i = 1; i <= 4; i++)
-                {
-                    byte[] over={};
-                    int len =0;
-                    switch (i){
-                        case 1:
-                            over=b2;
-                            len=173;
-                            break;
-//                        case 2:
+        zzIp("1392222222222222.122268.3.3asdwedawrfegsdrfthgjh");
+//
+//        byte[] b1=hexStrToByteArray("FF 22 01 00 65 37 AA 3F 07 00 00 23 10 26 CC 26 17 00");
+//        byte[] b2=hexStrToByteArray("FF 22 01 00 65 37 AA 3F 07 00 00 23 10 26 11 30 01 3C 00 14 60 00 10 40 00 09 50 00 05 50 00 12 50 00 11 30 00 14 60 00 10 40 00 09 50 00 05 50 00 12 50 00 11 30 00 20 18 00 13 07 00 50 39 00 13 24 00 13 10 1C 32 32 FF 44 01 00 65 33 AB 3F 07 00 00 23 10 26 11 30 01 3C 00 33 50 00 05 20 00 06 10 00 06 80 00 06 80 00 08 40 00 33 50 00 05 20 00 06 10 00 06 80 00 06 80 00 08 40 00 20 26 00 13 09 00 50 35 00 13 24 00 13 12 1C 33 31 32 31 32 33 33 31 32 31 32 33 33 31 32 31 32 33 43 44 4B 50 30 30 59 0A 37 00 01 83 72");
+////        byte[] b3=hexStrToByteArray("50 00 11 30 00 20 18 00 13 07 00 50 39 00 13 24 00 13 10 1C CC");
+////        byte[] b4=hexStrToByteArray("32 32 01 FF 02 01 12 23 10 26 11 30 07 59 0C 00 00 00 79 79 00 CC");
+////        byte[] b=hexStrToByteArray("FF 04 02 00 12 23 10 26 11 30 08 59 0D 00 01 00 98 90");
+//        Thread myThread = new Thread(new Runnable(){
+//            @Override
+//            public void run() {
+//                // 在 run() 方法中编写线程要执行的任务。
+//
+//                for (int i = 1; i <= 4; i++)
+//                {
+//                    byte[] over={};
+//                    int len =0;
+//                    switch (i){
+//                        case 1:
 //                            over=b2;
-//                            len=36;
+//                            len=173;
 //                            break;
-//                        case 3:
-//                            over=b3;
-//                            len=20;
-//                            break;
-//                        case 4:
-//                            over=b4;
-//                            len=21;
-//                            break;
+////                        case 2:
+////                            over=b2;
+////                            len=36;
+////                            break;
+////                        case 3:
+////                            over=b3;
+////                            len=20;
+////                            break;
+////                        case 4:
+////                            over=b4;
+////                            len=21;
+////                            break;
+//
+//                    }
+//                    process_readBuffer(over,len);
+//
+//                }
+//
+//            }
+//        });
+//        myThread.start();
+//        try {
+//            Thread.sleep(100);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        getByteArrayData();
 
-                    }
-                    process_readBuffer(over,len);
 
-                }
 
-            }
-        });
-        myThread.start();
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        getByteArrayData();
+
+
 
 //        process_readBuffer(b,5);
 
@@ -208,7 +232,7 @@ public class testObject {
             while (true) {
                 // 如果堵塞队列中存在数据就将其输出
                 if (msgQueue.size() > 0) {
-                byte[] data = msgQueue.take();
+                    byte[] data = msgQueue.take();
                     String hex = new BigInteger(1,data).toString(16);
 //                    System.out.println(hex);
                     StringBuffer hex1 = new StringBuffer();

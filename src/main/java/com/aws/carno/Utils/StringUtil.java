@@ -3,12 +3,15 @@ package com.aws.carno.Utils;
 
 
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 字符串操作工具类
@@ -91,20 +94,54 @@ public class StringUtil {
         return String.valueOf(rs);
     }
 
+    /**
+     *利用正则表达式从字符串中获取ip
+     */
+    public static String getIpInLong(String ipLong)
+    {
+//        String regex="^(?:[0-9]\\.){3}[0-9]{1,3}$";
+        String regex="\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
 
-    public static void main(String[] args) {
+        Pattern pattern=Pattern.compile(regex);
+
+        Matcher matcher=pattern.matcher(ipLong);
+        String ipstr="";
+        if(matcher.find())
+        {
+            ipstr=matcher.group();
+        }
+        //System.err.println(ipstr);
+        return ipstr;
+    }
+
+
+    public static void main(String[] args) throws ParseException {
         // 创建 2 个线程的线程池
-        ExecutorService threadPool = Executors.newFixedThreadPool(8);
-        for (int i = 0; i < 100000; i++) {
-            //  System.out.println("任务被执行,线程:" + Thread.currentThread().getName());
-            threadPool.execute(StringUtil::genNo);
-        }
-        while (true) {
-            if (!threadPool.isTerminated()) {
-                System.err.println("运行完毕！");
-                return;
-            }
-        }
+//        ExecutorService threadPool = Executors.newFixedThreadPool(8);
+//        for (int i = 0; i < 100000; i++) {
+//            //  System.out.println("任务被执行,线程:" + Thread.currentThread().getName());
+//            threadPool.execute(StringUtil::genNo);
+//        }
+//        while (true) {
+//            if (!threadPool.isTerminated()) {
+//                System.err.println("运行完毕！");
+//                return;
+//            }
+//        }
+        int year=1997;
+        int month=12;
+        int day=7;
+        int hour=6;
+        int min=10;
+        int sec=5;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
+        Date passTime = dateFormat.parse(year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec);
+
+        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
+        String no = sf.format(passTime);
+//        String no=year+""+month+""+day;
+        System.err.println(no);
+
 
     }
 }

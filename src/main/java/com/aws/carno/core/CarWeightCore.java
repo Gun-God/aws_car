@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -39,9 +40,11 @@ public class CarWeightCore implements Runnable {
     public AwsPreCheckDataHistoryMapper preCheckDataHistoryMapper;
     @Autowired
     public AwsCarTypeMapper carTypeMapper;
+    @Autowired
+    public AwsAllWeightDataMapper allWeightDataMapper;
 //    @Autowired
 //    public AwsTempWeightDataMapper tempWeightDataMapper;
-
+    public String portName;
 
     public RtxCommUtil commUtil;
 
@@ -52,6 +55,7 @@ public class CarWeightCore implements Runnable {
         carWeightCore.relationMapper = this.relationMapper;
         carWeightCore.carTypeMapper = this.carTypeMapper;
         carWeightCore.preCheckDataHistoryMapper = this.preCheckDataHistoryMapper;
+        carWeightCore.allWeightDataMapper=this.allWeightDataMapper;
 //        carWeightCore.tempWeightDataMapper = this.tempWeightDataMapper;
     }
 
@@ -68,6 +72,7 @@ public class CarWeightCore implements Runnable {
     public CarWeightCore(String name, int bits, String code, int factory) {
         //开启串口
         //RtxCommUtil commUtil = RxtxBuilder.init(name, bits, 1, code, factory);
+        portName=name;
         this.commUtil = RxtxBuilder.init(name, bits, 1, code, factory);
         assert this.commUtil != null;
         // TODO Auto-generated method stub
@@ -79,6 +84,24 @@ public class CarWeightCore implements Runnable {
 //        tempWeightData.setLane(1);
 //        carWeightCore.tempWeightDataMapper.insert(tempWeightData);
 //    }
+    @Scheduled(cron ="0 0 * * * ?")
+    public void setTimeSameWithComputer()
+    {
+        byte[] bytes = null;
+        try {
+            bytes=RTXDataParse.setTimeTextGen("UTF-8");
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if(bytes!=null)
+        {
+            if(commUtil!=null)
+            commUtil.send(bytes);
+        }
+
+    }
+
 
     public void startMain() {
         //开启串口
@@ -123,9 +146,12 @@ public class CarWeightCore implements Runnable {
                     //将称台字节数据解析到实体类
                     AwsPreCheckData preCheckData = RTXDataParse.byteArrayToObjData(bytes1);
                     AwsTempWeightData tempWeightData=new AwsTempWeightData();
+                    AwsAllWeightData  allWeightData=new AwsAllWeightData();
                     BeanUtils.copyProperties(preCheckData, tempWeightData);
+                   //
+                    BeanUtils.copyProperties(preCheckData,allWeightData);
 
-                    ;
+
 
                     //test
                     // tempWeightData.setDeviceId(hex_weit_data);
@@ -152,14 +178,20 @@ public class CarWeightCore implements Runnable {
 //                    System.out.println("称重台检测内容：");
 //                    System.err.println(preCheckData);
                     //String preNo = StartCore.hashMap.get(hashCode);
-                    String preNo = StringUtil.genNo();
-                    String filename = "F:"+ File.separator+"weight_data"+File.separator +preNo+".txt";
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
-                    writer.write(String.valueOf(hex1));
 
-                    writer.newLine(); // 写入换行
-                    // 在这里写入文件
-                    writer.close();
+
+                    String preNo = StringUtil.genNo();
+                    try {
+                        String filename = "F:" + File.separator + "percheck_data" + File.separator + preNo + ".txt";
+                        BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
+                        writer.write(String.valueOf(hex1));
+
+                        writer.newLine(); // 写入换行
+                        // 在这里写入文件
+                        writer.close();
+                    }catch (IOException e) {
+                        e.printStackTrace();
+                    }
 //                    保存秤台数据临时解析用
 
 
@@ -181,8 +213,13 @@ public class CarWeightCore implements Runnable {
 
 //                    preCheckData.setCreateTime(new Date());
                     tempWeightData.setCreateTime(preCheckData.getPassTime());
+
                     tempWeightData.setPreNo(preNo);
-                    tempWeightData.setOrgCode("027");
+
+                    allWeightData.setCreateTime(allWeightData.getPassTime());
+                    allWeightData.setPreNo(preNo);
+                    AwsScan as_weight=StartCore.weightScanMaps.get(this.portName);
+                    tempWeightData.setOrgCode(as_weight.getOrgCode());
 
 
 
@@ -191,6 +228,7 @@ public class CarWeightCore implements Runnable {
                     //TODO 如果是空的，则插入称重,最大限重，车辆类型等内容插入数据库
 //                    if(preCheckData.getWeight()!=0 && preCheckData.getWeight() <10000)
                     carWeightCore.tempWeightDataMapper.insert(tempWeightData);
+                    carWeightCore.allWeightDataMapper.insert(allWeightData);
                     // carWeightCore.preCheckDataHistoryMapper.insert(preHis);
 
 //                    long inset_db_over=System.currentTimeMillis();
@@ -209,8 +247,6 @@ public class CarWeightCore implements Runnable {
             }
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
 

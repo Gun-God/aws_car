@@ -20,6 +20,7 @@ import gnu.io.SerialPortEventListener;
 import gnu.io.UnsupportedCommOperationException;
 import org.apache.commons.lang3.ArrayUtils;
 
+import static com.aws.carno.Utils.LedUtil.hexStr2Str;
 import static org.apache.ibatis.ognl.DynamicSubscript.first;
 
 /**
@@ -40,10 +41,13 @@ public class RtxCommUtil implements SerialPortEventListener {
     String code;
     int factory;
     LinkedList<Byte> data_list = new LinkedList<Byte>();
-    byte[] cache = null;
+    byte[] cache =new byte[1024];
     int idx=0;
     int maxsize=0;//一个有效数据的最大值
     int length=0;
+    int again_flag=0;//0 or 1
+    byte[] again_Array = new byte[1024];
+    int again_length=0;
 
 
     public RtxCommUtil(CommPortIdentifier temp, String portName, int bits, int type, String code, int factory) {
@@ -122,43 +126,81 @@ public class RtxCommUtil implements SerialPortEventListener {
             if(numsBytes>=maxsize)
             {//长度达标直接发送
                 msgQueue.add(buffer);
+
+                if(numsBytes>maxsize&&buffer[maxsize]==-1)
+                {
+                    //再去读一次数据
+                    again_flag=1;
+                    //将maxsize+1,numsBytes-1这个索引值区间内的
+                    System.arraycopy(buffer,maxsize,again_Array,0,numsBytes-maxsize);
+                    again_length=numsBytes-maxsize;
+//                    again_Array
+                }
                 maxsize=0;
                 idx=0;
-                cache=null;
+                cache=new byte[1024];
 
             }
             else{
                 //长度不达标缓存起来
-//                ArrayUtils.addAll(cache,buffer);
+                // ArrayUtils.addAll(cache,buffer);
 //                System.arraycopy(buffer,0,cache,idx,numsBytes);
 //                idx+=numsBytes;
-                cache=buffer;
+                idx=0;
+//                cache=buffer;
+                System.arraycopy(buffer,0,cache,idx,numsBytes);
                 idx+=numsBytes;
+                again_flag=0;
+                again_Array=new byte[1024];
+                again_length=0;
             }
 
         }
+        else if(buffer[0]==-1&&buffer[2]==3){
+            //如果是校时返回指令
+            if(buffer[5]==0) {
+                System.out.println("校时成功");
+            }
+            else{
+                System.out.println("校时失败");
+            }
+        }
         else{
-            if(cache!=null)
+//            if(cache!=null)
+            if(idx!=0)
             {
                 if(idx+numsBytes>=maxsize)
                 {//如果缓存收够了
                     System.arraycopy(buffer,0,cache,idx,numsBytes);
                     idx+=numsBytes;
                     msgQueue.add(cache);
+                    if( (idx+numsBytes) >maxsize && cache[maxsize]==-1)
+                    {
+//                        int again_length=idx-maxsize;
+                        //再去读一次数据
+                        again_flag=1;
+                        //将maxsize+1,numsBytes-1这个索引值区间内的
+                        System.arraycopy(cache,maxsize,again_Array,0,idx-maxsize);                        again_length=idx-maxsize-1;
+
+                    }
                     maxsize=0;
                     idx=0;
-                    cache=null;
+                    cache=new byte[1024];
                 }
                 else{//如果缓存没收够
                     System.arraycopy(buffer,0,cache,idx,numsBytes);
                     idx+=numsBytes;
+                    //针对again
+                    again_flag=0;
+                    again_Array=new byte[1024];
+                    again_length=0;
+
                 }
             }
 
         }
 
     }
-
 
     //
     public void process_readBuffer(byte[] buffer,int len)
@@ -260,39 +302,6 @@ public class RtxCommUtil implements SerialPortEventListener {
             case SerialPortEvent.RI:
             case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
                 break;
-            //case SerialPortEvent.DATA_AVAILABLE:// 当有可用数据时读取数据,并且给串口返回数据
-//                byte[] readBuffer = new byte[1024];
-              /*  byte[] readBuffer =null;
-                try {
-                    int numBytes =-1;
-                    int availableBytes= inputStream.available();
-                    int flag=1;
-                    while(availableBytes>0)
-                    {
-                        readBuffer=new byte[availableBytes];
-                        inputStream.read(readBuffer);
-                        System.arraycopy(readBuffer,0,data_list,c_idx,availableBytes);
-                        c_idx+=availableBytes;
-                        availableBytes=inputStream.available();
-                        flag=0;
-                    }
-                    if(flag==0)
-                    {
-                        msgQueue.add(cache);
-                        c_idx=0;
-                        cache=new byte[1024];
-                        readBuffer =null;
-                    }
-
-
-                    // 重新构造缓冲对象，否则有可能会影响接下来接收的数据
-
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-                break;*/
-
             case SerialPortEvent.DATA_AVAILABLE:// 当有可用数据时读取数据,并且给串口返回数据
                 byte[] readBuffer = new byte[1024];
                 try {
@@ -306,7 +315,20 @@ public class RtxCommUtil implements SerialPortEventListener {
                             if (type == 1){
                                 //idx=0;
                                 process_writeBuffer2(readBuffer,numBytes);
+                                int curl_flag=0;
+                                while(again_flag==1)
+                                {
+                                    process_writeBuffer2(again_Array,again_length);
+                                    curl_flag++;
+                                    if(again_flag==0 || curl_flag==3)
+                                    {
+                                        again_Array=new byte[1024];
+                                        again_length=0;
+                                        again_flag=0;
+                                        break;
+                                    }
 
+                                }
                                 // process_readBuffer(readBuffer, numBytes);
 
                                 //生成唯一流水号

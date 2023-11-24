@@ -2,6 +2,7 @@ package com.aws.carno.core;
 
 
 import com.aws.carno.Utils.LedUtil;
+import com.aws.carno.Utils.RTXDataParse;
 import com.aws.carno.Utils.RtxCommUtil;
 import com.aws.carno.Utils.RxtxBuilder;
 import com.aws.carno.domain.AwsLed;
@@ -34,14 +35,26 @@ public class LedCore {
         RtxCommUtil commUtil = RxtxBuilder.init(name, bits, 0,null,0);
         assert commUtil != null;
         //byte[] bytes = LedUtil.ledTextGen("请苏FE1861进站检测", "GB18030");
-        byte[] bytes = LedUtil.ledTextGen(msg, "GB18030");
+        //byte[] bytes = LedUtil.ledTextGen(msg, "GB18030");
+        byte[] bytes=null;
+        try {
+            bytes = RTXDataParse.setTimeTextGen("utf-8");
+        }
+        catch (Exception e){
+
+        }
         commUtil.send(bytes);
-        commUtil.ClosePort();
-        AwsLed led = new AwsLed();
-        led.setContent(msg);
-        led.setCreateTime(new Date());
-        led.setOrgCode("027");
-        ledMapper.insert(led);
+//        try {
+//            Thread.sleep(10000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        commUtil.ClosePort();
+        //AwsLed led = new AwsLed();
+        //led.setContent(msg);
+       // led.setCreateTime(new Date());
+       // led.setOrgCode("027");
+        //ledMapper.insert(led);
         // TODO Auto-generated method stub
     }
 

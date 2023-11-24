@@ -4,9 +4,12 @@ import com.aws.carno.Enum.NetDEVEnum;
 import com.aws.carno.Interface.ImosSdkInterface;
 import com.aws.carno.Struct.NETDEV_DEVICE_INFO_S;
 import com.aws.carno.Struct.NETDEV_PIC_DATA_S;
+import com.aws.carno.Utils.NetDEVSdk;
 import com.aws.carno.domain.AwsCarNo;
 import com.aws.carno.domain.AwsPreCheckData;
+import com.aws.carno.domain.AwsTempCarnoData;
 import com.aws.carno.mapper.AwsPreCheckDataMapper;
+import com.aws.carno.mapper.AwsTempCarnoDataMapper;
 import com.aws.carno.service.AwsCarNoService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sun.jna.Pointer;
@@ -22,6 +25,8 @@ import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -38,8 +43,8 @@ public class UnvCarNoCore {
     private static ImosSdkInterface ITF = null;
     private static final String CURRENTDIRECTORY = System.getProperty("user.dir");
     private final ImosSdkInterface.NETDEV_PIC_UPLOAD_PF multiPicDataCallBackFun;
-//    private int m_lChannelID = 1;
-    private String tfLocalIP;
+    //    private int m_lChannelID = 1;
+    private String tfLocalIP="192.168.10.248";
     private Pointer m_lpDevHandle;
     private Pointer m_lpPicHandle;
     //过车唯一标识，流水号
@@ -50,11 +55,14 @@ public class UnvCarNoCore {
     @Autowired
     AwsCarNoService noService;
     @Autowired
+    public AwsTempCarnoDataMapper tempCarnoDataMapper;
+    @Autowired
     AwsPreCheckDataMapper preCheckDataMapper;
     @PostConstruct
     public void init(){
         unvCarNoCore=this;
         unvCarNoCore.preCheckDataMapper=this.preCheckDataMapper;
+        unvCarNoCore.tempCarnoDataMapper=this.tempCarnoDataMapper;
         unvCarNoCore.noService=this.noService;
     }
 
@@ -67,9 +75,10 @@ public class UnvCarNoCore {
         @Override
         public void callback(NETDEV_PIC_DATA_S.ByReference pstPicData, Pointer lpUserParam) {
             AwsCarNo carNo = new AwsCarNo();
+            AwsTempCarnoData pre = new AwsTempCarnoData();
             int i;
             Pointer p;
-            File file;
+//            File file;
             int colorIndex;
             byte[] imageData;
             String szTmpFile;
@@ -80,39 +89,56 @@ public class UnvCarNoCore {
             String[] rowValues = {"", "", "", "", "", ""};
             String[] arrPlateColor = {"白", "黄", "蓝", "黑", "其他", "绿", "红", "黄绿", "渐变绿"};
             String[] carType = {"未知", "小型车", "中型车", "大型车", "其他"};
-            String szTmp = CURRENTDIRECTORY + File.separator + "pic" + File.separator;
+            FileOutputStream fout;
+            String url="";
 
-            file = new File(szTmp);
-            if (!file.exists()) {
-                file.mkdir();
-            }
 
-           // strPassTime = new String(pstPicData.szPassTime).trim();
+            // strPassTime = new String(pstPicData.szPassTime).trim();
             for (i = 0; i < pstPicData.ulPicNumber; i++) {
                 p = picData[i].getPointer();
                 imageData = p.getByteArray(0, pstPicData.aulDataLen[i]);
                 strCarPlate = new String(pstPicData.szCarPlate).trim();
-
-                if (strCarPlate.length() > 1) {
-                    szTmpFile = String.format("%s_%s_%d.jpg", szTmp + preNo, strCarPlate, i);
-                } else {
-                    szTmpFile = String.format("%s_%d.jpg", szTmp + preNo, i);
-                }
-
+                String newName=new String(pstPicData.szPassTime);
+                newName=newName+"_"+i;
+                String szTmp = "F:"+File.separator+"pic"+File.separator+ strCarPlate+File.separator + newName +".jpg";
+                url=strCarPlate+File.separator + newName +".jpg";
                 try {
-                    file = new File(szTmpFile);
-                    if (!file.exists()) {
+                    File file = new File(szTmp);
+                    if (!file.getParentFile().exists())
+                        file.getParentFile().mkdirs();
+                    if (!file.exists())
                         file.createNewFile();
-                    }
-                    fileOutputStream = new FileOutputStream(file);
-                    try {
-                        fileOutputStream.write(imageData);
-                    } finally {
-                        fileOutputStream.close();
-                    }
-                } catch (IOException ex) {
-                    LOGGER.error("Error" + ex.getMessage(), ex);
+                    file.setWritable(true);
+                    fout = new FileOutputStream(file);
+
+
+                    fout.write(imageData);
+                    fout.close();
+                    System.err.println("写入图片完毕！");
+
+                }catch(IOException ex){
+
                 }
+//                if (strCarPlate.length() > 1) {
+//                    szTmpFile = String.format("%s_%s_%d.jpg", szTmp + preNo, strCarPlate, i);
+//                } else {
+//                    szTmpFile = String.format("%s_%d.jpg", szTmp + preNo, i);
+//                }
+
+//                try {
+//                    file = new File(szTmpFile);
+//                    if (!file.exists()) {
+//                        file.createNewFile();
+//                    }
+//                    fileOutputStream = new FileOutputStream(file);
+//                    try {
+//                        fileOutputStream.write(imageData);
+//                    } finally {
+//                        fileOutputStream.close();
+//                    }
+//                } catch (IOException ex) {
+//                    LOGGER.error("Error" + ex.getMessage(), ex);
+//                }
             }
 
             if ((pstPicData.lPlateColor >= 0) && (pstPicData.lPlateColor < 9)) {
@@ -120,23 +146,52 @@ public class UnvCarNoCore {
             } else {
                 colorIndex = 4;
             }
+
+            pre.setImg(url);
+            carNo.setImg(url);
+
             int code = pstPicData.lVehicleType;
             int speed = pstPicData.lVehicleSpeed;
             rowValues[0] = Integer.toString(pstPicData.ulRecordID);
-            carNo.setCode(carType[code]);
+            carNo.setCode(ip+"_"+ carType[code]);
             rowValues[1] = new String(pstPicData.szPassTime);
-            carNo.setCreateTime(new Date());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
+            Date passTime = null;
+
+
+            try {
+                passTime=dateFormat.parse(rowValues[1]);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            carNo.setCreateTime(passTime);
+            pre.setPassTime(passTime);
             rowValues[2] = Integer.toString(pstPicData.lLaneID);
-            carNo.setLane(pstPicData.lLaneID);
+//            carNo.setLane(pstPicData.lLaneID);
+            carNo.setLane(1);
+            pre.setLane(1);
+            //
+            int colorCode=1;
+            if(colorIndex==1)
+            {
+                colorCode=2;
+            }
+            else if(colorCode>=4){
+                colorCode=3;
+            }
             rowValues[3] = arrPlateColor[colorIndex];
-            carNo.setColor(colorIndex);
+            carNo.setColor(colorCode);
+            pre.setColor(colorCode);
             try {
                 rowValues[4] = new String(pstPicData.szCarPlate, "GB2312").trim();
                 carNo.setCarNo(rowValues[4]);
+                pre.setCarNo(rowValues[4]);
             } catch (UnsupportedEncodingException ex) {
                 LOGGER.error("Error" + ex.getMessage(), ex);
             }
             rowValues[5] = "否";
+            unvCarNoCore.tempCarnoDataMapper.insert(pre);
             unvCarNoCore.noService.insertCarNo(carNo);
 
             // vehicleInfoModel.addRow(rowValues);
@@ -151,7 +206,7 @@ public class UnvCarNoCore {
     }
 
 
-    //实况抓拍   实时抓拍
+    //实况抓拍
     public void btnPicPlayActionPerformed(String no) {//GEN-FIRST:event_btnPicPlayActionPerformed
         preNo=no;
         if (Pointer.NULL == m_lpDevHandle) {
@@ -165,7 +220,7 @@ public class UnvCarNoCore {
         if (Pointer.NULL != m_lpPicHandle) {
             iRet = ITF.NETDEV_StopPicStream(m_lpPicHandle);
             if (NetDEVEnum.TRUE == iRet) {
-               m_lpPicHandle = Pointer.NULL;
+                m_lpPicHandle = Pointer.NULL;
             }
         }
         //  iRet = JOptionPane.showConfirmDialog(this, "是否进行断网续传？", "", JOptionPane.YES_NO_OPTION);
@@ -180,12 +235,14 @@ public class UnvCarNoCore {
             return;
         }
         reTranIP = localIP;
-        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, Pointer.NULL, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+//        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, Pointer.NULL, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, NetDEVSdk.m_lpPicWndHandle, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+
         if (Pointer.NULL == m_lpPicHandle) {
             log.info("照片流起流失败.");
         } else {
             //   bPicPlay = true;
-            log.info("照片流起流失败.");
+            log.info("照片流起流成功.");
         }
         //JOptionPane.showMessageDialog(this, errMessage);
     }//GEN-LAST:event_btnPicPlayActionPerformed
@@ -205,7 +262,7 @@ public class UnvCarNoCore {
         } else {
             log.info("照片流停流成功.");
         }
-       m_lpPicHandle = Pointer.NULL;
+        m_lpPicHandle = Pointer.NULL;
     }//GEN-LAST:event_btnStopPicPlayActionPerformed
 
 
@@ -226,10 +283,12 @@ public class UnvCarNoCore {
         m_lpDevHandle = ITF.NETDEV_Login(deviceIP, wDevPort, userName, passWord, pstDevInfo);
         if (Pointer.NULL != m_lpDevHandle) {
             log.info("NETDEV_Login succeed.");
+            btnPicPlayActionPerformed("");
+
         } else {
             log.info("NETDEV_Login failed.");
         }
-
+        // btnPicPlayActionPerformed("");
         // JOptionPane.showMessageDialog(this, errMessage);
         return true;
         //  ITF.NETDEV_SetStatusCallBack(StatusReportCallBack);
