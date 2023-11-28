@@ -181,17 +181,17 @@ public class CarWeightCore implements Runnable {
 
 
                     String preNo = StringUtil.genNo();
-                    try {
-                        String filename = "F:" + File.separator + "percheck_data" + File.separator + preNo + ".txt";
-                        BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
-                        writer.write(String.valueOf(hex1));
-
-                        writer.newLine(); // 写入换行
-                        // 在这里写入文件
-                        writer.close();
-                    }catch (IOException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        String filename = "F:" + File.separator + "percheck_com_data" + File.separator + preNo + ".txt";
+//                        BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
+//                        writer.write(String.valueOf(hex1));
+//
+//                        writer.newLine(); // 写入换行
+//                        // 在这里写入文件
+//                        writer.close();
+//                    }catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
 //                    保存秤台数据临时解析用
 
 

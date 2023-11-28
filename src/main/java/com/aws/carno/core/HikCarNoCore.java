@@ -205,14 +205,18 @@ public class HikCarNoCore implements Runnable{
                 if (strItsPlateResult.struPicInfo[0].dwDataLen > 0) {
                     SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
                     SimpleDateFormat sf2 = new SimpleDateFormat("yyyyMMdd");
+                    SimpleDateFormat sf3 = new SimpleDateFormat("yyyyMM");
                     no=sf2.format(passTime);
+                    String yue=sf3.format(passTime);
                     String newName = sf.format(passTime)+"_"+random_end;
                     FileOutputStream fout;
                     try {
 //                        用passtime的年月日作为文件名
-                        String filename = "F:"+File.separator+"pic"+File.separator+no+File.separator + newName +".jpg";
+                        String filename = "F:"+File.separator+"pic"+File.separator+yue+File.separator+no+File.separator + newName +".jpg";
 
                         File file = new File(filename);
+                        if (!file.getParentFile().getParentFile().exists())
+                            file.getParentFile().getParentFile().mkdirs();
                         if (!file.getParentFile().exists())
                             file.getParentFile().mkdirs();
                         if (!file.exists())
@@ -669,10 +673,13 @@ public class HikCarNoCore implements Runnable{
 
                     SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
                     SimpleDateFormat sf2 = new SimpleDateFormat("yyyyMMdd");
+                    SimpleDateFormat sf3 = new SimpleDateFormat("yyyyMM");
+
                     String newName = sf.format(passTime)+"_"+random_end;
                     String no=sf2.format(passTime);
-                    pre.setImg(no+File.separator+newName+".jpg");
-                    carNo.setImg(no+File.separator+newName+".jpg");
+                    String yue=sf3.format(passTime);
+                    pre.setImg(yue+File.separator+no+File.separator+newName+".jpg");
+                    carNo.setImg(yue+File.separator+no+File.separator+newName+".jpg");
                     hikCarNoCore.tempCarnoDataMapper.insert(pre);
                     hikCarNoCore.carNoMapper.insert(carNo);
 

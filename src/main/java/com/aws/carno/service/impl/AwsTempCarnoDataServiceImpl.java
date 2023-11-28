@@ -41,7 +41,7 @@ public class AwsTempCarnoDataServiceImpl
     @Autowired
     AwsPreCheckDataHistoryMapper historyMapper;
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void processWeightAndCarno() {
         System.out.println("定时任务匹配");
@@ -125,6 +125,7 @@ public class AwsTempCarnoDataServiceImpl
                             p=preCheckDataMapper.insert(preCheckData);
                             h=historyMapper.insert(preCheckDataHistory);
                         }catch (Exception e){
+                            e.printStackTrace();
                             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                         }
                         if ( p== 1 &&  h== 1)
