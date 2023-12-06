@@ -22,3 +22,6 @@ upyun:
   username:
   password:
   imageHost: xx
+
+car-img:
+  path: F:\pic\

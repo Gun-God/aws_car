@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.swing.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -98,8 +99,12 @@ public class UnvCarNoCore {
                 p = picData[i].getPointer();
                 imageData = p.getByteArray(0, pstPicData.aulDataLen[i]);
                 strCarPlate = new String(pstPicData.szCarPlate).trim();
-                String newName=new String(pstPicData.szPassTime);
-                newName=newName+"_"+i;
+                String test=new String(pstPicData.szPassTime);
+                test.substring(0,10);
+                Date d=new Date();
+                String times=String.valueOf(d.getTime());
+                String newName=String.valueOf(i);
+                newName=times+"_"+i;
                 String szTmp = "F:"+File.separator+"pic"+File.separator+ strCarPlate+File.separator + newName +".jpg";
                 url=strCarPlate+File.separator + newName +".jpg";
                 try {
@@ -112,9 +117,11 @@ public class UnvCarNoCore {
                     fout = new FileOutputStream(file);
 
 
+
                     fout.write(imageData);
                     fout.close();
                     System.err.println("写入图片完毕！");
+
 
                 }catch(IOException ex){
 
@@ -140,6 +147,9 @@ public class UnvCarNoCore {
 //                    LOGGER.error("Error" + ex.getMessage(), ex);
 //                }
             }
+            if(1==1)
+                return ;
+
 
             if ((pstPicData.lPlateColor >= 0) && (pstPicData.lPlateColor < 9)) {
                 colorIndex = pstPicData.lPlateColor;
@@ -149,7 +159,8 @@ public class UnvCarNoCore {
 
             pre.setImg(url);
             carNo.setImg(url);
-
+            if(1==1)
+                return ;
             int code = pstPicData.lVehicleType;
             int speed = pstPicData.lVehicleSpeed;
             rowValues[0] = Integer.toString(pstPicData.ulRecordID);
@@ -205,73 +216,125 @@ public class UnvCarNoCore {
         multiPicDataCallBackFun = new multiPicDataCall();
     }
 
-
-    //实况抓拍
-    public void btnPicPlayActionPerformed(String no) {//GEN-FIRST:event_btnPicPlayActionPerformed
-        preNo=no;
-        if (Pointer.NULL == m_lpDevHandle) {
-            log.info("未登录");
+    private void btnPicPlayActionPerformed() {//GEN-FIRST:event_btnPicPlayActionPerformed
+        if (Pointer.NULL == NetDEVSdk.m_lpDevHandle) {
+//            JOptionPane.showMessageDialog(this, "当前用户未登录");
+            System.err.println("未登录");
             return;
         }
+
         int iRet;
         int ifReTran;
-        String localIP = tfLocalIP;
+        String errMessage;
+        String localIP = "192.168.10.248";
         String reTranIP;
-        if (Pointer.NULL != m_lpPicHandle) {
-            iRet = ITF.NETDEV_StopPicStream(m_lpPicHandle);
+
+        if (Pointer.NULL != NetDEVSdk.m_lpPicHandle) {
+            iRet = ITF.NETDEV_StopPicStream(NetDEVSdk.m_lpPicHandle);
             if (NetDEVEnum.TRUE == iRet) {
-                m_lpPicHandle = Pointer.NULL;
+                NetDEVSdk.m_lpPicHandle = Pointer.NULL;
             }
         }
-        //  iRet = JOptionPane.showConfirmDialog(this, "是否进行断网续传？", "", JOptionPane.YES_NO_OPTION);
-        ifReTran = NetDEVEnum.TRUE;
+
+//        iRet = JOptionPane.showConfirmDialog(this, "是否进行断网续传？", "", JOptionPane.YES_NO_OPTION);
 //        if (JOptionPane.YES_OPTION == iRet) {
+//            ifReTran = NetDEVEnum.TRUE;
 //        } else {
 //            ifReTran = NetDEVEnum.FALSE;
 //        }
-        if (localIP.isEmpty()) {
-            log.info("本地IP为空.");
-            // JOptionPane.showMessageDialog(this, "本地IP为空.");
+        ifReTran = NetDEVEnum.TRUE;
+        if ((localIP.isEmpty()) && (NetDEVEnum.TRUE == ifReTran)) {
+//            JOptionPane.showMessageDialog(this, "本地IP为空.");
+            System.err.println("本地ip为空");
             return;
         }
-        reTranIP = localIP;
-//        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, Pointer.NULL, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
-        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, NetDEVSdk.m_lpPicWndHandle, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
 
-        if (Pointer.NULL == m_lpPicHandle) {
-            log.info("照片流起流失败.");
+        if ((localIP.isEmpty()) || (NetDEVEnum.FALSE == ifReTran)) {
+            reTranIP = "";
         } else {
-            //   bPicPlay = true;
-            log.info("照片流起流成功.");
+            reTranIP = localIP;
         }
-        //JOptionPane.showMessageDialog(this, errMessage);
+
+        NetDEVSdk.m_lpPicHandle = ITF.NETDEV_StartPicStream(NetDEVSdk.m_lpDevHandle, NetDEVSdk.m_lpPicWndHandle, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+        if (Pointer.NULL == NetDEVSdk.m_lpPicHandle) {
+            errMessage = "照片流起流失败";
+            System.err.println(errMessage);
+        } else {
+            NetDEVSdk.bPicPlay = true;
+            errMessage = "照片流起流成功";
+            System.err.println(errMessage);
+        }
+
+//        JOptionPane.showMessageDialog(this, errMessage);
     }//GEN-LAST:event_btnPicPlayActionPerformed
 
-    public void btnStopPicPlayActionPerformed() {//GEN-FIRST:event_btnStopPicPlayActionPerformed
-        if (Pointer.NULL ==m_lpPicHandle) {
-            log.info("当前未启用照片流");
-            return;
-        }
-
-        int iRet;
-
-        iRet = ITF.NETDEV_StopPicStream(m_lpPicHandle);
-        if (NetDEVEnum.TRUE != iRet) {
-            log.info(String.format("照片流停流失败: %d.", iRet));
-            return;
-        } else {
-            log.info("照片流停流成功.");
-        }
-        m_lpPicHandle = Pointer.NULL;
-    }//GEN-LAST:event_btnStopPicPlayActionPerformed
+//
+//    //实况抓拍
+//    public void btnPicPlayActionPerformed(String no) {//GEN-FIRST:event_btnPicPlayActionPerformed
+//        preNo=no;
+//        if (Pointer.NULL == m_lpDevHandle) {
+//            log.info("未登录");
+//            return;
+//        }
+//        int iRet;
+//        int ifReTran;
+//        String localIP = tfLocalIP;
+//        String reTranIP;
+//        if (Pointer.NULL != m_lpPicHandle) {
+//            iRet = ITF.NETDEV_StopPicStream(m_lpPicHandle);
+//            if (NetDEVEnum.TRUE == iRet) {
+//                m_lpPicHandle = Pointer.NULL;
+//            }
+//        }
+//        //  iRet = JOptionPane.showConfirmDialog(this, "是否进行断网续传？", "", JOptionPane.YES_NO_OPTION);
+//        ifReTran = NetDEVEnum.TRUE;
+////        if (JOptionPane.YES_OPTION == iRet) {
+////        } else {
+////            ifReTran = NetDEVEnum.FALSE;
+////        }
+//        if (localIP.isEmpty()) {
+//            log.info("本地IP为空.");
+//            // JOptionPane.showMessageDialog(this, "本地IP为空.");
+//            return;
+//        }
+//        reTranIP = localIP;
+////        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, Pointer.NULL, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+//        m_lpPicHandle = ITF.NETDEV_StartPicStream(m_lpDevHandle, NetDEVSdk.m_lpPicWndHandle, ifReTran, reTranIP, multiPicDataCallBackFun, Pointer.NULL);
+//
+//        if (Pointer.NULL == m_lpPicHandle) {
+//            log.info("照片流起流失败.");
+//        } else {
+//            //   bPicPlay = true;
+//            log.info("照片流起流成功.");
+//        }
+//        //JOptionPane.showMessageDialog(this, errMessage);
+//    }//GEN-LAST:event_btnPicPlayActionPerformed
+//
+//    public void btnStopPicPlayActionPerformed() {//GEN-FIRST:event_btnStopPicPlayActionPerformed
+//        if (Pointer.NULL ==m_lpPicHandle) {
+//            log.info("当前未启用照片流");
+//            return;
+//        }
+//
+//        int iRet;
+//
+//        iRet = ITF.NETDEV_StopPicStream(m_lpPicHandle);
+//        if (NetDEVEnum.TRUE != iRet) {
+//            log.info(String.format("照片流停流失败: %d.", iRet));
+//            return;
+//        } else {
+//            log.info("照片流停流成功.");
+//        }
+//        m_lpPicHandle = Pointer.NULL;
+//    }//GEN-LAST:event_btnStopPicPlayActionPerformed
 
 
     //用户登录
     public boolean loginPerformed(String userName, String passWord, String deviceIP, int port) {//GEN-FIRST:event_btnLoginActionPerformed
         ip=deviceIP;
-        if (Pointer.NULL != m_lpDevHandle) {
+        if (Pointer.NULL !=NetDEVSdk.m_lpDevHandle) {
             log.info("用户已登录！");
-            ITF.NETDEV_Logout(m_lpDevHandle);
+            ITF.NETDEV_Logout(NetDEVSdk.m_lpDevHandle);
             return false;
         }
 //        String userName = tfUserName.getText();
@@ -280,10 +343,10 @@ public class UnvCarNoCore {
         short wDevPort = (short) port;
         NETDEV_DEVICE_INFO_S.ByReference pstDevInfo = new NETDEV_DEVICE_INFO_S.ByReference();
 
-        m_lpDevHandle = ITF.NETDEV_Login(deviceIP, wDevPort, userName, passWord, pstDevInfo);
-        if (Pointer.NULL != m_lpDevHandle) {
+        NetDEVSdk.m_lpDevHandle = ITF.NETDEV_Login(deviceIP, wDevPort, userName, passWord, pstDevInfo);
+        if (Pointer.NULL != NetDEVSdk.m_lpDevHandle) {
             log.info("NETDEV_Login succeed.");
-            btnPicPlayActionPerformed("");
+            btnPicPlayActionPerformed();
 
         } else {
             log.info("NETDEV_Login failed.");

@@ -18,9 +18,10 @@ import java.util.Date;
  * @date : 2023/06/20 11:21
  */
 
-public class LedCore {
+public class LedCore  implements Runnable {
     public static LedCore ledCore;
-
+    public String com_name;
+    public String msg;
     @Autowired
     AwsLedMapper ledMapper;
 
@@ -29,26 +30,35 @@ public class LedCore {
         ledCore.ledMapper=this.ledMapper;
     }
 
+    public LedCore(){
 
-    public   void startMain(String name, int bits, String msg) {
+    }
+
+    public LedCore(String com_name,String content){
+        this.com_name=com_name;
+        this.msg=content;
+    }
+
+    public void startMain(String name, int bits, String msg) {
         //开启串口
-        RtxCommUtil commUtil = RxtxBuilder.init(name, bits, 0,null,0);
+        RtxCommUtil commUtil = RxtxBuilder.init(this.com_name, bits, 0,null,0);
         assert commUtil != null;
-        //byte[] bytes = LedUtil.ledTextGen("请苏FE1861进站检测", "GB18030");
+        byte[] bytes = LedUtil.ledTextGen(this.msg, "GB18030");
         //byte[] bytes = LedUtil.ledTextGen(msg, "GB18030");
-        byte[] bytes=null;
+//        byte[] bytes=null;
+//        try {
+//            bytes = RTXDataParse.setTimeTextGen("utf-8");
+//        }
+//        catch (Exception e){
+//
+//        }
         try {
-            bytes = RTXDataParse.setTimeTextGen("utf-8");
-        }
-        catch (Exception e){
-
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         commUtil.send(bytes);
-//        try {
-//            Thread.sleep(10000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+
 //        commUtil.ClosePort();
         //AwsLed led = new AwsLed();
         //led.setContent(msg);
@@ -56,6 +66,11 @@ public class LedCore {
        // led.setOrgCode("027");
         //ledMapper.insert(led);
         // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void run() {
+        startMain("请苏FE1861进站检测",9600,"请苏FE1861进站检测");
     }
 
 }

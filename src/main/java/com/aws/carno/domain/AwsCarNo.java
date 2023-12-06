@@ -57,6 +57,10 @@ public class AwsCarNo implements Serializable {
      */
     private Integer lane;
 
+//    orgCode
+    private String orgCode;
+
+
     @TableField(exist = false)
     private String ip;
 

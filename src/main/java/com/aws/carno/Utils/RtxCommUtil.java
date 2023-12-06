@@ -136,6 +136,14 @@ public class RtxCommUtil implements SerialPortEventListener {
                     again_length=numsBytes-maxsize;
 //                    again_Array
                 }
+
+                if(numsBytes==maxsize)
+                {
+                    again_flag=0;
+                    again_Array=new byte[1024];
+                    again_length=0;
+                }
+
                 maxsize=0;
                 idx=0;
                 cache=new byte[1024];
@@ -183,6 +191,13 @@ public class RtxCommUtil implements SerialPortEventListener {
                         System.arraycopy(cache,maxsize,again_Array,0,idx-maxsize);                        again_length=idx-maxsize-1;
 
                     }
+                    if(idx+numsBytes==maxsize)
+                    {
+                        again_flag=0;
+                        again_Array=new byte[1024];
+                        again_length=0;
+                    }
+
                     maxsize=0;
                     idx=0;
                     cache=new byte[1024];
@@ -320,7 +335,7 @@ public class RtxCommUtil implements SerialPortEventListener {
                                 {
                                     process_writeBuffer2(again_Array,again_length);
                                     curl_flag++;
-                                    if(again_flag==0 || curl_flag==3)
+                                    if(again_flag==0 || curl_flag==5)
                                     {
                                         again_Array=new byte[1024];
                                         again_length=0;

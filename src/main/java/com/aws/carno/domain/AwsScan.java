@@ -109,4 +109,23 @@ public class AwsScan implements Serializable {
      */
     private Integer factory;
 
+
+    /**
+     * 对外展示车道
+     * */
+    private Integer showLane;
+
+    /*
+    * 车道实际名称
+    * **/
+    private String laneName;
+
+    /**
+     * 摄像头方向(1前向 2后向)
+     * **/
+    private Integer direction;
+
+
+
+
 }

@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.sql.SQLOutput;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -38,6 +40,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 @Component
 public class HikCarNoCore implements Runnable{
+
+//    @Value("${car-img.path}")
+//    String parentPath;
+       @Value("${car-img.path}")
+       private String carImgPath;
+
     public static HikCarNoCore hikCarNoCore;
     static HCNetSDK hCNetSDK = null;
     //    static int lUserID = -1;//用户句柄 实现对设备登录
@@ -174,7 +182,14 @@ public class HikCarNoCore implements Runnable{
                 mc.put("plateData",strItsPlateResult);
                 mc.put("time",d);
                 mc.put("randomEnd",random_end);
-                msgQueue1.add(mc);
+                //如果触发车道为2，则不放入队列
+                int lanes = (int) strItsPlateResult.byDriveChan;
+                if(lanes!=1){
+                    System.out.println("设备"+newIp+" 捕捉到其他车道数据:车道号为 "+lanes);
+                }else{
+                    msgQueue1.add(mc);
+                }
+
 //                    msgQueue1.add(strItsPlateResult);
 
 
@@ -185,8 +200,21 @@ public class HikCarNoCore implements Runnable{
 //                    e.printStackTrace();
 //                }
 //                no=no.replaceAll("\\x00", "");
-//                if(!no.contains("无"))
-//                    no=no.substring(1);
+                if(!no.contains("无"))
+                    no=no.substring(1);
+//                取出车牌
+                try {
+                    no = new String(strItsPlateResult.struPlateInfo.sLicense, "GB2312");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                no=no.replaceAll("\\x00", "");
+                if(!no.contains("无"))
+                    no=no.substring(1);
+                //取出ip设备对应的检测站
+                AwsScan hikScan=StartCore.HikScanMaps.get(newIp);
+                String orgMsg=hikScan.getOrgCode();
+
                 HCNetSDK.NET_DVR_TIME_V30 snapTime = strItsPlateResult.struSnapFirstPicTime;
                 int year = snapTime.wYear; //
                 int month = snapTime.byMonth; // 注意：月份是从0开始的
@@ -194,7 +222,7 @@ public class HikCarNoCore implements Runnable{
                 int hour = snapTime.byHour;
                 int min = snapTime.byMinute;
                 int sec = snapTime.bySecond;
-                no=year+""+month+""+day;
+               // no=year+""+month+""+day;
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yy-M-d H:m:s");
                 Date passTime = null;
                 try {
@@ -204,15 +232,15 @@ public class HikCarNoCore implements Runnable{
                 }
                 if (strItsPlateResult.struPicInfo[0].dwDataLen > 0) {
                     SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
-                    SimpleDateFormat sf2 = new SimpleDateFormat("yyyyMMdd");
-                    SimpleDateFormat sf3 = new SimpleDateFormat("yyyyMM");
-                    no=sf2.format(passTime);
-                    String yue=sf3.format(passTime);
-                    String newName = sf.format(passTime)+"_"+random_end;
+                    SimpleDateFormat sf2 = new SimpleDateFormat("yyyyMM");
+
+                    String yue=sf2.format(passTime);
+                    String newName = no+"_"+sf.format(passTime)+"_"+random_end;
                     FileOutputStream fout;
                     try {
 //                        用passtime的年月日作为文件名
-                        String filename = "F:"+File.separator+"pic"+File.separator+yue+File.separator+no+File.separator + newName +".jpg";
+                        String filename = "F:"+File.separator+"pic"+File.separator+yue+File.separator+orgMsg+File.separator + newName +".jpg";
+//                        String filename = parentPath+yue+File.separator+orgMsg+File.separator + newName +".jpg";
 
                         File file = new File(filename);
                         if (!file.getParentFile().getParentFile().exists())
@@ -660,6 +688,7 @@ public class HikCarNoCore implements Runnable{
                     carNo.setCreateTime(passTime);
                     carNo.setCode(nowIp + "_" + trans_array[VehicleType]);
                     carNo.setLane(laneInfo);
+                    carNo.setOrgCode(orgCode);
                     pre.setCarNo(sLicense);
                     pre.setPassTime(passTime);
                     pre.setLane(laneInfo);
@@ -672,14 +701,14 @@ public class HikCarNoCore implements Runnable{
                      */
 
                     SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
-                    SimpleDateFormat sf2 = new SimpleDateFormat("yyyyMMdd");
-                    SimpleDateFormat sf3 = new SimpleDateFormat("yyyyMM");
 
-                    String newName = sf.format(passTime)+"_"+random_end;
-                    String no=sf2.format(passTime);
-                    String yue=sf3.format(passTime);
-                    pre.setImg(yue+File.separator+no+File.separator+newName+".jpg");
-                    carNo.setImg(yue+File.separator+no+File.separator+newName+".jpg");
+                    SimpleDateFormat sf2 = new SimpleDateFormat("yyyyMM");
+
+                    String newName = sLicense+"_"+sf.format(passTime)+"_"+random_end;
+
+                    String yue=sf2.format(passTime);
+                    pre.setImg(yue+File.separator+orgCode+File.separator+newName+".jpg");
+                    carNo.setImg(yue+File.separator+orgCode+File.separator+newName+".jpg");
                     hikCarNoCore.tempCarnoDataMapper.insert(pre);
                     hikCarNoCore.carNoMapper.insert(carNo);
 

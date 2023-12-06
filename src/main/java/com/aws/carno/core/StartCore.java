@@ -274,8 +274,31 @@ public class StartCore implements CommandLineRunner {
         HikCarNoStart();
 
         //new ScoketWeightCore("192.10.12.243", 3132);
-//        LedCore led=new LedCore();
+//        for(int i=1;i<=2;i++)
+//        {
+//
+//            String text="请你如来";
+//            if(i==2)
+//            {
+//                i=7;
+//                text="请苏FE1861进站检测";
+//            }
+//            LedCore led=new LedCore("COM"+i,text);
 ////        led.startMain("COM1",9600,"请苏FE1861进站检测");
-//        led.startMain("COM7",115200,"请苏FE1861进站检测！");
+////        led.startMain("COM7",115200,"请苏FE1861进站检测！");
+//            Thread thread=new Thread(led);
+//            thread.start();
+//            try {
+//                Thread.sleep(10000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+//        LedCore led2=new LedCore("COM7");
+////        led.startMain("COM1",9600,"请苏FE1861进站检测");
+////        led.startMain("COM7",115200,"请苏FE1861进站检测！");
+//        Thread thread2=new Thread(led2);
+//        thread2.start();
     }
 }
