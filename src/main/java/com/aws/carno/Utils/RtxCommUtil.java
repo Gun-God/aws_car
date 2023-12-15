@@ -48,6 +48,7 @@ public class RtxCommUtil implements SerialPortEventListener {
     int again_flag=0;//0 or 1
     byte[] again_Array = new byte[1024];
     int again_length=0;
+    int no_maxsize_length=-1;
 
 
     public RtxCommUtil(CommPortIdentifier temp, String portName, int bits, int type, String code, int factory) {
@@ -123,6 +124,24 @@ public class RtxCommUtil implements SerialPortEventListener {
         {
             maxsize=buffer[4];
 
+            if(maxsize==0 && numsBytes <=4 && numsBytes>=3) //-1 55 1 0 or -1 55 1
+            {
+                if(numsBytes==3)
+                    no_maxsize_length=3;//说明未知长度
+                else if(numsBytes==4)
+                    no_maxsize_length=4;
+
+                idx=0;
+                //maxsize=numsBytes;
+                System.arraycopy(buffer,0,cache,idx,numsBytes);
+                idx+=numsBytes;
+                again_flag=0;
+                again_Array=new byte[1024];
+                again_length=0;
+                return;
+
+            }
+            no_maxsize_length=-1;
             if(numsBytes>=maxsize)
             {//长度达标直接发送
                 msgQueue.add(buffer);
@@ -164,19 +183,26 @@ public class RtxCommUtil implements SerialPortEventListener {
             }
 
         }
-        else if(buffer[0]==-1&&buffer[2]==3){
-            //如果是校时返回指令
-            if(buffer[5]==0) {
-                System.out.println("校时成功");
-            }
-            else{
-                System.out.println("校时失败");
-            }
-        }
         else{
 //            if(cache!=null)
             if(idx!=0)
             {
+                if(no_maxsize_length>0)
+                {
+                    if(no_maxsize_length==3)
+                    {
+                        //说明buffer[1]是maxsize
+                        maxsize=buffer[1];
+                    }
+                    else if(no_maxsize_length==4)
+                    {
+                        //说明buffer[0]是maxsize
+                        maxsize=buffer[0];
+                    }
+                    //既然获取到了maxsize 那么可以清零这些变量了
+                    no_maxsize_length=-1;
+                }
+
                 if(idx+numsBytes>=maxsize)
                 {//如果缓存收够了
                     System.arraycopy(buffer,0,cache,idx,numsBytes);
