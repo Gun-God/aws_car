@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -206,18 +207,22 @@ public class RtxCommUtil implements SerialPortEventListener {
                 if(idx+numsBytes>=maxsize)
                 {//如果缓存收够了
                     System.arraycopy(buffer,0,cache,idx,numsBytes);
+                    //！！！！！！！！
                     idx+=numsBytes;
                     msgQueue.add(cache);
-                    if( (idx+numsBytes) >maxsize && cache[maxsize]==-1)
+
+//                    if( (idx+numsBytes) >maxsize && cache[maxsize]==-1)
+                    if( idx >maxsize && cache[maxsize]==-1)
                     {
 //                        int again_length=idx-maxsize;
                         //再去读一次数据
                         again_flag=1;
                         //将maxsize+1,numsBytes-1这个索引值区间内的
-                        System.arraycopy(cache,maxsize,again_Array,0,idx-maxsize);                        again_length=idx-maxsize-1;
-
+                        System.arraycopy(cache,maxsize,again_Array,0,idx-maxsize);
+//                        again_length=idx-maxsize-1;
+                        again_length=idx-maxsize;
                     }
-                    if(idx+numsBytes==maxsize)
+                    if(idx==maxsize)
                     {
                         again_flag=0;
                         again_Array=new byte[1024];
@@ -344,15 +349,24 @@ public class RtxCommUtil implements SerialPortEventListener {
             case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
                 break;
             case SerialPortEvent.DATA_AVAILABLE:// 当有可用数据时读取数据,并且给串口返回数据
+
                 byte[] readBuffer = new byte[1024];
                 try {
                     int numBytes = -1;
                     while (inputStream.available() > 0) {
-                        System.err.println("");
+
                         numBytes = inputStream.read(readBuffer);
-                        //
-                        //byte[] final_readBuffer=process_readBuffer(readBuffer, numBytes);
+
                         if (numBytes > 0) {
+
+                       /*     for(int i=0;i<numBytes;i++)
+                            {
+                                System.out.println(readBuffer[i]+" ");
+                            }
+
+                            System.out.println("");*/
+
+
                             if (type == 1){
                                 //idx=0;
                                 process_writeBuffer2(readBuffer,numBytes);
@@ -361,7 +375,7 @@ public class RtxCommUtil implements SerialPortEventListener {
                                 {
                                     process_writeBuffer2(again_Array,again_length);
                                     curl_flag++;
-                                    if(again_flag==0 || curl_flag==5)
+                                    if(again_flag==0 || curl_flag==4)
                                     {
                                         again_Array=new byte[1024];
                                         again_length=0;
@@ -401,7 +415,25 @@ public class RtxCommUtil implements SerialPortEventListener {
 
     public void send(byte [] bytes) {
         try {
+
+            LocalDateTime now = LocalDateTime.now();
+
+            // 提取年、月、日、时、分、秒
+            int year = now.getYear() % 100; // 获取年份并取后两位
+            int month = now.getMonthValue();
+            int day = now.getDayOfMonth();
+            int hour = now.getHour();
+            int minute = now.getMinute();
+            int second = now.getSecond();
+            System.out.println("称台发送时间："+year+"-"+month+"-"+day+" "+hour+":"+minute+":"+second);
+           /* for(int i=0;i<bytes.length;i++)
+            {
+                System.out.print(bytes[i]+" ");
+            }
+            System.out.println();*/
+
             outputStream.write(bytes);
+
         } catch (IOException e) {
             e.printStackTrace();
         }

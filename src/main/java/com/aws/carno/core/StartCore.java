@@ -139,6 +139,7 @@ public class StartCore implements CommandLineRunner {
 
             CarWeightCore cRead = new CarWeightCore(scan.getPortName(), 115200, null, 0);
             Thread thread=new Thread(cRead);
+
             thread.start();
             weightScanMaps.put(scan.getPortName(),scan);
            // cRead.startMain();//异步线程处理数据
@@ -269,9 +270,17 @@ public class StartCore implements CommandLineRunner {
 //        }
 //        process_preCheckData();
 
-
-        carWeighStart();
         HikCarNoStart();
+        carWeighStart();
+
+       // LedCore led=new LedCore("COM2","111");
+      //  Thread thread=new Thread(led);
+       // thread.start();
+       //     try {
+        //        Thread.sleep(1000);
+       //     } catch (InterruptedException e) {
+        //        e.printStackTrace();
+       //     }
 
         //new ScoketWeightCore("192.10.12.243", 3132);
 //        for(int i=1;i<=2;i++)
@@ -285,7 +294,7 @@ public class StartCore implements CommandLineRunner {
 //            }
 //            LedCore led=new LedCore("COM"+i,text);
 ////        led.startMain("COM1",9600,"请苏FE1861进站检测");
-////        led.startMain("COM7",115200,"请苏FE1861进站检测！");
+//        led.startMain("COM7",115200,"请苏FE1861进站检测！");
 //            Thread thread=new Thread(led);
 //            thread.start();
 //            try {

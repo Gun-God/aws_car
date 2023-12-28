@@ -17,6 +17,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -45,6 +46,7 @@ public class CarWeightCore implements Runnable {
 //    @Autowired
 //    public AwsTempWeightDataMapper tempWeightDataMapper;
     public String portName;
+    public boolean isSetTime;
 
     public RtxCommUtil commUtil;
 
@@ -73,8 +75,9 @@ public class CarWeightCore implements Runnable {
         //开启串口
         //RtxCommUtil commUtil = RxtxBuilder.init(name, bits, 1, code, factory);
         portName=name;
+        isSetTime=false;
         this.commUtil = RxtxBuilder.init(name, bits, 1, code, factory);
-        assert this.commUtil != null;
+      //  assert this.commUtil != null;
         // TODO Auto-generated method stub
     }
 
@@ -84,22 +87,27 @@ public class CarWeightCore implements Runnable {
 //        tempWeightData.setLane(1);
 //        carWeightCore.tempWeightDataMapper.insert(tempWeightData);
 //    }
-    @Scheduled(cron ="0 0 * * * ?")
+//    @Scheduled(cron ="0 0 * * * ?")
+  //  @Scheduled(cron ="0 0/5 * * * ?")
     public void setTimeSameWithComputer()
     {
         byte[] bytes = null;
         try {
             bytes=RTXDataParse.setTimeTextGen("UTF-8");
+            if(bytes!=null)
+            {
+//                System.out.println("bytes不为空");
+
+                if(this.commUtil!=null)
+                {
+                    System.out.println("this.commUtil不为空");
+                   this.commUtil.send(bytes);
+                }
+
+            }
         }catch (Exception e) {
             e.printStackTrace();
         }
-
-        if(bytes!=null)
-        {
-            if(commUtil!=null)
-            commUtil.send(bytes);
-        }
-
     }
 
 
@@ -159,9 +167,36 @@ public class CarWeightCore implements Runnable {
                     // tempWeightData.setDeviceId(String.valueOf(hex1));
 
                     Date time = preCheckData.getPassTime();
-                   // System.out.println("时间差" + DateUtil.getBetweenDays(time, new Date()));
+                   //commutil通过定时函数无法得到 出现commutil为空的情况 故可以放入一个线程执行
+//                    获得当前时间，若为整点则校时
+                    // 获取当前日期和时间
+                    LocalDateTime now = LocalDateTime.now();
+                    int minute = now.getMinute();
+                    int second = now.getSecond();
+                    if(minute==0 && !isSetTime)
+                    {
+                        // 调用校时接口
+                        isSetTime=true;
+                        setTimeSameWithComputer();
+                    }
+                    if(minute!=0)
+                    {
+                        isSetTime=false;
+                    }
+                    // 提取年、月、日、时、分、秒
+                   // int year = now.getYear() % 100; // 获取年份并取后两位
+                    //int month = now.getMonthValue();
+                    //int day = now.getDayOfMonth();
+                    //int hour = now.getHour();
+
+
+
+                    // System.out.println("时间差" + DateUtil.getBetweenDays(time, new Date()));
 //                    if (DateUtil.getBetweenDays( new Date(),time) > 0|| preCheckData.getWeight()==0)
 //                        continue;
+
+
+
                     if (preCheckData.getWeight()==0)
                         continue;
 

@@ -43,8 +43,7 @@ public class HikCarNoCore implements Runnable{
 
 //    @Value("${car-img.path}")
 //    String parentPath;
-       @Value("${car-img.path}")
-       private String carImgPath;
+
 
     public static HikCarNoCore hikCarNoCore;
     static HCNetSDK hCNetSDK = null;
@@ -74,6 +73,11 @@ public class HikCarNoCore implements Runnable{
 
     @Autowired
     public AwsCarNoMapper  carNoMapper;
+
+    @Value("${car-img.path}")
+    private String carImgPath;
+
+
     //    @Autowired
 //    public AwsTempCarnoDataMapper tempCarnoDataMapper;
     @PostConstruct
@@ -121,6 +125,7 @@ public class HikCarNoCore implements Runnable{
             int hour = now.getHour();
             int minute = now.getMinute();
             int second = now.getSecond();
+                System.out.println("摄像头校时时间："+year+"-"+month+"-"+day+" "+hour+":"+minute+":"+second);
             time.dwYear=year;
             time.dwMonth=month;
             time.dwDay=day;
@@ -240,7 +245,10 @@ public class HikCarNoCore implements Runnable{
                     try {
 //                        用passtime的年月日作为文件名
                         String filename = "F:"+File.separator+"pic"+File.separator+yue+File.separator+orgMsg+File.separator + newName +".jpg";
-//                        String filename = parentPath+yue+File.separator+orgMsg+File.separator + newName +".jpg";
+                        System.out.println("保存路径"+filename);
+//                        String filename = carImgPath+yue+File.separator+orgMsg+File.separator + newName +".jpg";
+
+
 
                         File file = new File(filename);
                         if (!file.getParentFile().getParentFile().exists())

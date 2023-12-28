@@ -215,6 +215,7 @@ public class RTXDataParse {
         int hour = now.getHour();
         int minute = now.getMinute();
         int second = now.getSecond();
+        System.out.println("称台校时时间："+year+"-"+month+"-"+day+" "+hour+":"+minute+":"+second);
 //        int hour = 0;
 //        int minute=0;
 //        int second = 0;

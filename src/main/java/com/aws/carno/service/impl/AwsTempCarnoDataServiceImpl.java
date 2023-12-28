@@ -24,8 +24,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
 public class AwsTempCarnoDataServiceImpl
@@ -40,6 +43,8 @@ public class AwsTempCarnoDataServiceImpl
     AwsPreCheckDataMapper preCheckDataMapper;
     @Autowired
     AwsPreCheckDataHistoryMapper historyMapper;
+
+    public static BlockingQueue<AwsPreCheckData> carMsgQueue = new LinkedBlockingQueue<>();
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -105,13 +110,26 @@ public class AwsTempCarnoDataServiceImpl
                                 BeanUtils.copyProperties(data, pCData);
                             }
 //                            }
+
                         }
 
-                         //如果未匹配上
+
                         plist.remove(pCData);
                         count[0]++;
                         System.out.println("称重表剩余数据" + plist.size());
                         System.out.println("匹配成功" + awsTempCarnoData.getCarNo());
+                        int noExFlag=1;
+                        if(awsTempCarnoData.getColor()==1&&pCData.getPreAmt()<=2.0)//黄色
+                        {
+                            noExFlag=0;
+                        }
+                        else if(awsTempCarnoData.getColor()==0&&pCData.getPreAmt()>30.0)
+                        {
+                            noExFlag=0;
+                        }
+
+                        if(noExFlag==1)//如果不是异常值
+                        {
 
                         AwsPreCheckData preCheckData = new AwsPreCheckData();
                         BeanUtils.copyProperties(pCData, preCheckData);
@@ -121,16 +139,34 @@ public class AwsTempCarnoDataServiceImpl
                         AwsPreCheckDataHistory preCheckDataHistory = new AwsPreCheckDataHistory();
                         BeanUtils.copyProperties(preCheckData, preCheckDataHistory);
                         int p = 0,h=0;
-                        try {
-                            p=preCheckDataMapper.insert(preCheckData);
-                            h=historyMapper.insert(preCheckDataHistory);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+
+                            try {
+                                p = preCheckDataMapper.insert(preCheckData);
+                                h = historyMapper.insert(preCheckDataHistory);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                            }
+                            if (p == 1 && h == 1) {
+                                //插入
+                                //判断是否超重 如果超重放入队列
+                                try{
+                                carMsgQueue.add(preCheckData);
+                                }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+
+                                historyMapper.insertOtherModel(preCheckData);
+                                awsTempCarnoDataMapper.deleteById(awsTempCarnoData.getId());
+                                awsTempWeightDataMapper.deleteById(pCData.getId());
+                            }
+
                         }
-                        if ( p== 1 &&  h== 1)
+                        else if(noExFlag==0)
                         {
-                            historyMapper.insertOtherModel(preCheckData);
+                            System.out.println("exceptionFlag");
                             awsTempCarnoDataMapper.deleteById(awsTempCarnoData.getId());
                             awsTempWeightDataMapper.deleteById(pCData.getId());
                         }
